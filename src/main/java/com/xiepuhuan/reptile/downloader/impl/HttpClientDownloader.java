@@ -13,7 +13,6 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.client.CookieStore;
@@ -104,20 +103,14 @@ public class HttpClientDownloader implements Downloader {
 
     private Content parse(HttpEntity entity) {
 
-        ContentType contentType = ContentType.getOrDefault(entity);
-
         try {
             byte[] body = toByteArray(entity);
-            if (body == null) {
+
+            if (!ArgUtils.notEmpty(body)) {
                 return null;
             }
-            Content content = new Content(contentType, body);
 
-            if (contentType.getMimeType().startsWith("text")) {
-                String textContent = new String(body, Charsets.toCharset(contentType.getCharset()));
-                content.setTextContent(textContent);
-            }
-            return content;
+            return new Content(ContentType.getOrDefault(entity), body);
         } catch (IOException e) {
             LOGGER.warn("Failed Get the contents of an InputStreamas a byte[]: {}", e.getMessage());
             return null;

@@ -17,9 +17,9 @@ public class Request {
 
     public static final String POST_METHOD = "POST";
 
-    private String method;
+    private final String method;
 
-    private String url;
+    private final String url;
 
     private List<Cookie> cookies;
 
@@ -42,18 +42,8 @@ public class Request {
         return method;
     }
 
-    public Request setMethod(String method) {
-        this.method = method;
-        return this;
-    }
-
     public String getUrl() {
         return url;
-    }
-
-    public Request setUrl(String url) {
-        this.url = url;
-        return this;
     }
 
     public Cookie[] getCookies() {

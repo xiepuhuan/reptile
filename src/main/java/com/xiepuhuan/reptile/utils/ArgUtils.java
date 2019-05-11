@@ -23,6 +23,14 @@ public class ArgUtils {
         }
     }
 
+    public static boolean notEmpty(final byte[] bytes) {
+        if (bytes == null || bytes.length == 0) {
+            return false;
+        }
+
+        return true;
+    }
+
     public static void notEmpty(final Collection collection, final String name) {
         if (collection == null) {
             throw new NullPointerException(name + "can be not null");

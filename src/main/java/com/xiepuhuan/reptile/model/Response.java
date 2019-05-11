@@ -8,9 +8,9 @@ import org.apache.http.Header;
  */
 public class Response {
 
-    private int statusCode;
+    private final int statusCode;
 
-    private Header[] headers;
+    private final Header[] headers;
 
     private Content content;
 
@@ -23,18 +23,8 @@ public class Response {
         return statusCode;
     }
 
-    public Response setStatusCode(int statusCode) {
-        this.statusCode = statusCode;
-        return this;
-    }
-
     public Header[] getHeaders() {
         return headers;
-    }
-
-    public Response setHeaders(Header[] headers) {
-        this.headers = headers;
-        return this;
     }
 
     public Content getContent() {

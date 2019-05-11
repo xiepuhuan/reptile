@@ -1,17 +1,24 @@
 package com.xiepuhuan.reptile.model;
 
+import org.apache.commons.codec.Charsets;
 import org.apache.http.entity.ContentType;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 /**
  * @author xiepuhuan
  */
 public class Content {
 
-    private ContentType contentType;
+    private static final String TEXT_CONTENT_TYPE_PREFIX = "text";
 
-    private byte[] content;
+    private final ContentType contentType;
+
+    private final byte[] content;
 
     private String textContent;
+
+    private Document htmlContent;
 
     public Content(ContentType contentType, byte[] content) {
         this.contentType = contentType;
@@ -22,21 +29,19 @@ public class Content {
         return contentType;
     }
 
-    public Content setContentType(ContentType contentType) {
-        this.contentType = contentType;
-        return this;
-    }
-
     public byte[] getContent() {
         return content;
     }
 
-    public Content setContent(byte[] content) {
-        this.content = content;
-        return this;
-    }
-
     public String getTextContent() {
+        if (textContent != null) {
+            return textContent;
+        }
+
+        if (contentType.getMimeType().startsWith(TEXT_CONTENT_TYPE_PREFIX)) {
+            textContent = new String(content, Charsets.toCharset(contentType.getCharset()));
+        }
+
         return textContent;
     }
 
@@ -45,12 +50,29 @@ public class Content {
         return this;
     }
 
+    public Document getHtmlContent() {
+        if (htmlContent != null) {
+            return htmlContent;
+        }
+
+        if (ContentType.TEXT_HTML.getMimeType().equals(contentType.getMimeType())) {
+            htmlContent = Jsoup.parse(getTextContent());
+        }
+
+        return htmlContent;
+    }
+
+    public Content setHtmlContent(Document htmlContent) {
+        this.htmlContent = htmlContent;
+        return this;
+    }
+
     @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer("Content{");
         sb.append("contentType=").append(contentType);
         sb.append(", content=");
-        sb.append(textContent == null ? content : textContent);
+        sb.append(getTextContent() == null ? content : textContent);
         sb.append('}');
         return sb.toString();
     }
