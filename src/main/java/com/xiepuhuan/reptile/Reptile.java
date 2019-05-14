@@ -1,12 +1,15 @@
 package com.xiepuhuan.reptile;
 
+import com.xiepuhuan.reptile.config.ReptileConfig;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.utils.ArgUtils;
 import com.xiepuhuan.reptile.workflow.Workflow;
 import com.xiepuhuan.reptile.workflow.WorkflowThreadFactory;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,8 +118,18 @@ public class Reptile implements Runnable {
         return this;
     }
 
-    public Reptile addRequest(Request... requests) {
+    public Reptile addRequests(Request... requests) {
         reptileConfig.getScheduler().push(requests);
+        return this;
+    }
+
+    public Reptile addRequests(Collection<Request> requests) {
+        reptileConfig.getScheduler().push(requests);
+        return this;
+    }
+
+    public Reptile addUrls(Collection<String> urls) {
+        reptileConfig.getScheduler().push(urls.stream().map(Request::new).collect(Collectors.toList()));
         return this;
     }
 

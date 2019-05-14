@@ -7,6 +7,7 @@ import java.util.Map;
 /**
  * @author xiepuhuan
  */
+@SuppressWarnings("all")
 public class Result {
 
     private Map<String, Object> results;

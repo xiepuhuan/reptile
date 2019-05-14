@@ -1,7 +1,11 @@
 package com.xiepuhuan.reptile.downloader.impl;
 
+import com.xiepuhuan.reptile.config.DownloaderConfig;
 import com.xiepuhuan.reptile.downloader.Downloader;
-import com.xiepuhuan.reptile.downloader.DownloaderConfig;
+import com.xiepuhuan.reptile.downloader.common.Pool;
+import com.xiepuhuan.reptile.downloader.constants.UserAgentConstants;
+import com.xiepuhuan.reptile.downloader.model.Proxy;
+import com.xiepuhuan.reptile.downloader.common.impl.FixedPool;
 import com.xiepuhuan.reptile.model.Content;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.model.Response;
@@ -14,7 +18,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
@@ -45,6 +48,10 @@ public class HttpClientDownloader implements Downloader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpClientDownloader.class);
 
+    private final Pool<String> userAgentPool;
+
+    private final Pool<Proxy> proxyPool;
+
     private final CookieStore cookieStore;
 
     private final DownloaderConfig config;
@@ -59,6 +66,8 @@ public class HttpClientDownloader implements Downloader {
 
     public HttpClientDownloader(DownloaderConfig config) {
         ArgUtils.notNull(config, "DownloaderConfig");
+        this.userAgentPool = config.isEnableUserAgentPoolConfig() ? new FixedPool<>(config.getUserAgentPoolConfig()) : null;
+        this.proxyPool = config.isEnableProxyPoolConfig() ? new FixedPool<>(config.getProxyPoolConfig()) : null;
         this.config = config;
         this.cookieStore = new BasicCookieStore();
         this.clientConnectionManager = buildConnectionManager();
@@ -78,6 +87,14 @@ public class HttpClientDownloader implements Downloader {
         RequestBuilder requestBuilder = RequestBuilder.create(request.getMethod())
                 .setUri(request.getUrl());
 
+        if (proxyPool != null) {
+            requestBuilder.setConfig(RequestConfig.custom().setProxy(proxyPool.selectOne().buildHttpHost()).build());
+        }
+
+        if (userAgentPool != null) {
+            request.setHeader(UserAgentConstants.USER_AGENT_NAME, userAgentPool.selectOne());
+        }
+
         if (request.getHeaders() != null) {
             request.getHeaders().forEach(requestBuilder::addHeader);
         }
@@ -96,9 +113,8 @@ public class HttpClientDownloader implements Downloader {
 
         CloseableHttpResponse httpResponse = httpClient.execute(requestBuilder.build());
 
-        Response response = new Response(httpResponse.getStatusLine().getStatusCode(), httpResponse.getAllHeaders())
+        return new Response(httpResponse.getStatusLine().getStatusCode(), httpResponse.getAllHeaders())
                 .setContent(parse(httpResponse.getEntity()));
-        return response;
     }
 
     private Content parse(HttpEntity entity) {
@@ -140,26 +156,21 @@ public class HttpClientDownloader implements Downloader {
         RequestConfig requestConfig = RequestConfig.custom()
                 .setSocketTimeout(config.getSocketTimeout())
                 .setConnectTimeout(config.getConnectTimeout())
+                .setConnectionRequestTimeout(config.getConnectRequestTimeout())
                 .setCookieSpec(CookieSpecs.STANDARD)
                 .build();
 
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create()
-                .setUserAgent(config.getUserAgent())
+                .setUserAgent(config.getGeneralUserAgent())
+                .setMaxConnPerRoute(config.getDefaultMaxPerRoute())
                 .setMaxConnTotal(config.getMaxTotalConnections())
                 .setDefaultHeaders(config.getHeaders())
                 .setDefaultCookieStore(cookieStore)
                 .setDefaultRequestConfig(requestConfig)
-                .setConnectionManager(clientConnectionManager);
-
-        if (config.getProxyHost() != null) {
-            httpClientBuilder.setProxy(getProxyHost());
-        }
+                .setConnectionManager(clientConnectionManager)
+                .setProxy(config.getGeneralProxy() != null ? config.getGeneralProxy().buildHttpHost() : null);
 
         return httpClientBuilder.build();
-    }
-
-    private HttpHost getProxyHost() {
-        return new HttpHost(config.getProxyHost(), config.getProxyPort());
     }
 
     private PoolingHttpClientConnectionManager buildConnectionManager() {

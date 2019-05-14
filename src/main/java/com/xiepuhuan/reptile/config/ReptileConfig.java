@@ -1,4 +1,4 @@
-package com.xiepuhuan.reptile;
+package com.xiepuhuan.reptile.config;
 
 import com.xiepuhuan.reptile.consumer.Consumer;
 import com.xiepuhuan.reptile.consumer.impl.ConsoleConsumer;

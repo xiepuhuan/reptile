@@ -31,6 +31,14 @@ public class ArgUtils {
         return true;
     }
 
+    public static boolean notEmpty(final Object[] objects) {
+        if (objects == null || objects.length == 0) {
+            return false;
+        }
+
+        return true;
+    }
+
     public static void notEmpty(final Collection collection, final String name) {
         if (collection == null) {
             throw new NullPointerException(name + "can be not null");
@@ -40,6 +48,17 @@ public class ArgUtils {
             throw new IllegalArgumentException(name + "can be not empty");
         }
     }
+
+    public static void notEmpty(final Object[] objects, final String name) {
+        if (objects == null) {
+            throw new NullPointerException(name + "can be not null");
+        }
+
+        if (objects.length == 0) {
+            throw new IllegalArgumentException(name + "can be not empty");
+        }
+    }
+
 
     public static void check(final boolean expression, final String message) {
         if (!expression) {

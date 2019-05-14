@@ -1,6 +1,6 @@
 package com.xiepuhuan.reptile.workflow;
 
-import com.xiepuhuan.reptile.ReptileConfig;
+import com.xiepuhuan.reptile.config.ReptileConfig;
 import com.xiepuhuan.reptile.consumer.Consumer;
 import com.xiepuhuan.reptile.downloader.Downloader;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
@@ -89,11 +89,16 @@ public class Workflow implements Runnable {
                 }
                 Response response = downloader.download(request);
 
+                if (response == null) {
+                    continue;
+                }
+
                 ResponseHandler requestResponseHandler = selectHandler(request, response);
                 Result result = new Result();
 
                 List<Request> requests = null;
                 try {
+                    // TODO: 重试机制
                     requests = requestResponseHandler.handler(response, result);
                 } catch (Exception e) {
                     LOGGER.warn("Failed to handle response: [{}]", e.getMessage());

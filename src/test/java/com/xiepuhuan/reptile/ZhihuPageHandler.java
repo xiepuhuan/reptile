@@ -2,6 +2,7 @@ package com.xiepuhuan.reptile;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.xiepuhuan.reptile.config.ReptileConfig;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
 import com.xiepuhuan.reptile.model.Content;
 import com.xiepuhuan.reptile.model.Request;
