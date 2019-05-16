@@ -1,10 +1,14 @@
 package com.xiepuhuan.reptile;
 
+import com.xiepuhuan.reptile.common.redis.RedissonClientHolder;
+import com.xiepuhuan.reptile.config.DeploymentModeEnum;
 import com.xiepuhuan.reptile.config.ReptileConfig;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.utils.ArgUtils;
-import com.xiepuhuan.reptile.workflow.Workflow;
-import com.xiepuhuan.reptile.workflow.WorkflowThreadFactory;
+import com.xiepuhuan.reptile.workflow.WorkflowFactory;
+import com.xiepuhuan.reptile.workflow.impl.DistributedWorkflowFactory;
+import com.xiepuhuan.reptile.workflow.impl.SingleWorkflowFactory;
+import com.xiepuhuan.reptile.workflow.impl.WorkflowThreadFactory;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.*;
@@ -33,7 +37,7 @@ public class Reptile implements Runnable {
 
     private AtomicInteger activeThreadCount;
 
-    private CountDownLatch latch;
+    private CountDownLatch finalization;
 
     private ExecutorService executorService;
 
@@ -45,7 +49,7 @@ public class Reptile implements Runnable {
         this.reptileConfig = reptileConfig;
         this.executorService = buildExecutor();
         this.state = new AtomicInteger(STOPPED);
-        this.latch = new CountDownLatch(reptileConfig.getThreadCount());
+        this.finalization = new CountDownLatch(reptileConfig.getThreadCount());
         this.activeThreadCount = new AtomicInteger(0);
 
     }
@@ -91,7 +95,6 @@ public class Reptile implements Runnable {
 
     private void close() {
         executorService.shutdownNow();
-        reptileConfig.getDownloader().close();
     }
 
     @Override
@@ -101,13 +104,15 @@ public class Reptile implements Runnable {
         }
 
         LOGGER.info("Reptile [{}] start up", reptileConfig.getName());
-        Object object = new Object();
+
+        WorkflowFactory workflowFactory = buildWorkflow(reptileConfig);
         for (int i = 0; i < reptileConfig.getThreadCount(); ++i) {
-            executorService.execute(new Workflow(latch, activeThreadCount, object, "workflow-" + i,
-                    reptileConfig));
+            executorService.execute(workflowFactory.newWorkflow());
         }
         try {
-            latch.await();
+            finalization.await();
+            reptileConfig.getDownloader().close();
+            RedissonClientHolder.clear();
         } catch (InterruptedException e) {
             LOGGER.warn("Thread [{}] interrupted, crawler [{}] stopped", Thread.currentThread().getName(), reptileConfig.getName());
         }
@@ -137,5 +142,11 @@ public class Reptile implements Runnable {
         return activeThreadCount.get();
     }
 
+
+    private WorkflowFactory buildWorkflow(ReptileConfig reptileConfig) {
+        return reptileConfig.getDeploymentMode() == DeploymentModeEnum.SINGLE ?
+                new SingleWorkflowFactory(finalization, reptileConfig) :
+                new DistributedWorkflowFactory(finalization, reptileConfig);
+    }
 
 }

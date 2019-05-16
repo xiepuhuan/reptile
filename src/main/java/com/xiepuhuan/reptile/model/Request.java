@@ -3,7 +3,7 @@ package com.xiepuhuan.reptile.model;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.*;
+import org.apache.http.Header;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.ContentType;
 import org.apache.http.message.BasicHeader;
@@ -17,9 +17,9 @@ public class Request {
 
     public static final String POST_METHOD = "POST";
 
-    private final String method;
+    private String method;
 
-    private final String url;
+    private String url;
 
     private List<Cookie> cookies;
 
@@ -28,6 +28,8 @@ public class Request {
     private ContentType contentType;
 
     private byte[] body;
+
+    private Request() {}
 
     public Request(String method, String url) {
         this.method = method;

@@ -1,7 +1,7 @@
-package com.xiepuhuan.reptile.downloader.common.impl;
+package com.xiepuhuan.reptile.common.pool.impl;
 
 import com.xiepuhuan.reptile.config.PoolConfig;
-import com.xiepuhuan.reptile.downloader.common.SelectionStrategy;
+import com.xiepuhuan.reptile.common.pool.SelectionStrategy;
 import com.xiepuhuan.reptile.downloader.constants.SelectionStrategyEnum;
 import com.xiepuhuan.reptile.utils.ArgUtils;
 import com.xiepuhuan.reptile.utils.CollectionUtils;

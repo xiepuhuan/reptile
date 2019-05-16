@@ -24,8 +24,6 @@ public abstract class AbstractFilterScheduler implements Scheduler {
         this.requestFilter = requestFilter;
     }
 
-    protected abstract void push(Request request);
-
     @Override
     public void push(Request... requests) {
         if (ObjectUtils.isEmpty(requests)) {
@@ -51,5 +49,41 @@ public abstract class AbstractFilterScheduler implements Scheduler {
                 push(request);
             }
         }
+    }
+
+    @Override
+    public void put(Request... requests) throws InterruptedException {
+        if (ObjectUtils.isEmpty(requests)) {
+            return;
+        }
+
+        for (Request request : requests) {
+            if (!requestFilter.filter(request)) {
+                put(request);
+            }
+        }
+    }
+
+    @Override
+    public void put(Collection<Request> requests) throws InterruptedException {
+        if (CollectionUtils.isEmpty(requests)) {
+            return;
+        }
+
+        for (Request request : requests) {
+            if (!requestFilter.filter(request)) {
+                put(request);
+            }
+        }
+    }
+
+    @Override
+    public void put(Request requests) throws InterruptedException {
+        throw new UnsupportedOperationException("Scheduler does not support put method");
+    }
+
+    @Override
+    public Request take() throws InterruptedException {
+        throw new UnsupportedOperationException("Scheduler does not support take method");
     }
 }

@@ -1,4 +1,4 @@
-package com.xiepuhuan.reptile.downloader.common.impl;
+package com.xiepuhuan.reptile.common.pool.impl;
 
 import org.apache.commons.lang3.RandomUtils;
 

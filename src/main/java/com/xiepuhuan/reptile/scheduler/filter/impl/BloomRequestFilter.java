@@ -10,9 +10,9 @@ import java.nio.charset.Charset;
  */
 public class BloomRequestFilter implements RequestFilter {
 
-    private static final int DEFAULT_EXPECTED_INSERTIONS = 100000;
+    public static final int DEFAULT_EXPECTED_INSERTIONS = 100000;
 
-    private static final double DEFAULT_FPP = 0.03;
+    public static final double DEFAULT_FPP = 0.03;
 
     private static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
 

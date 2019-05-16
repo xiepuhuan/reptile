@@ -2,12 +2,18 @@ package com.xiepuhuan.reptile;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.xiepuhuan.reptile.common.redis.RedissonClientHolder;
+import com.xiepuhuan.reptile.config.DeploymentModeEnum;
+import com.xiepuhuan.reptile.config.RedisConfig;
 import com.xiepuhuan.reptile.config.ReptileConfig;
+import com.xiepuhuan.reptile.consumer.impl.ConsoleConsumer;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
 import com.xiepuhuan.reptile.model.Content;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.model.Response;
 import com.xiepuhuan.reptile.model.Result;
+import com.xiepuhuan.reptile.scheduler.impl.RedisFIFOQueueScheduler;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,13 +62,21 @@ class ZhihuPageHandler implements ResponseHandler {
         return true;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, InterruptedException {
+        RedissonClientHolder.setup(RedisConfig.DEFAULT_REDIS_CONFIG);
+
         long start = System.currentTimeMillis();
 
-        Reptile.create(ReptileConfig.Builder.cutom().appendResponseHandlers(new ZhihuPageHandler()).build())
-                .addUrls(URLS)
-                .start();
-
+        ReptileConfig config = ReptileConfig.Builder.cutom()
+                .setAsynRun(false)
+                .setThreadCount(4)
+                .appendResponseHandlers(new ZhihuPageHandler())
+                .setDeploymentMode(DeploymentModeEnum.Distributed)
+                .setScheduler(new RedisFIFOQueueScheduler())
+                .setConsumer(new ConsoleConsumer())
+                .build();
+        Reptile reptile = Reptile.create(config).addUrls(URLS);
+        reptile.start();
         System.out.println(System.currentTimeMillis() - start);
     }
 }

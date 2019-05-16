@@ -19,7 +19,6 @@ public class FIFOQueueScheduler extends AbstractFilterScheduler {
 
     public FIFOQueueScheduler(ConcurrentLinkedQueue<Request> queue, RequestFilter requestFilter) {
         super(requestFilter);
-
         ArgUtils.notNull(queue, "concurrentLinkedQueue");
         this.queue = queue;
     }
@@ -37,7 +36,7 @@ public class FIFOQueueScheduler extends AbstractFilterScheduler {
     }
 
     @Override
-    protected void push(Request request) {
+    public void push(Request request) {
         queue.offer(request);
     }
 

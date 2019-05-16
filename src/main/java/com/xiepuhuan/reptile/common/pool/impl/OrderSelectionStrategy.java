@@ -1,4 +1,4 @@
-package com.xiepuhuan.reptile.downloader.common.impl;
+package com.xiepuhuan.reptile.common.pool.impl;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

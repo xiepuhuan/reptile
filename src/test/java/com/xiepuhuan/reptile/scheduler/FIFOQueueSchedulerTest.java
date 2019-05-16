@@ -1,9 +1,12 @@
 package com.xiepuhuan.reptile.scheduler;
 
+import com.xiepuhuan.reptile.common.redis.RedissonClientHolder;
+import com.xiepuhuan.reptile.config.RedisConfig;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.scheduler.filter.impl.BloomRequestFilter;
 import com.xiepuhuan.reptile.scheduler.filter.impl.HashSetRequestFilter;
 import com.xiepuhuan.reptile.scheduler.impl.FIFOQueueScheduler;
+import com.xiepuhuan.reptile.scheduler.impl.RedisFIFOQueueScheduler;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Assert;
@@ -28,16 +31,18 @@ public class FIFOQueueSchedulerTest {
         requests.add(new Request(Request.POST_METHOD, "http://www.baidu.com/s").setBody("wd=code".getBytes()));
         requests.add(new Request(Request.GET_METHOD, "http://www.zhihu.com"));
         requests.add(new Request(Request.POST_METHOD, "http://www.zhihu.com"));
-
+        RedissonClientHolder.setup(RedisConfig.DEFAULT_REDIS_CONFIG);
     }
 
     @Test
     public void test() {
         test(new FIFOQueueScheduler(new BloomRequestFilter()));
         test(new FIFOQueueScheduler(new HashSetRequestFilter()));
+        test(new RedisFIFOQueueScheduler());
     }
 
-    private void test(FIFOQueueScheduler scheduler) {
+
+    private void test(Scheduler scheduler) {
 
         scheduler.push(requests);
         Assert.assertEquals(6, scheduler.size());

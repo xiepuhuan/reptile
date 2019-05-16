@@ -1,4 +1,4 @@
-package com.xiepuhuan.reptile.downloader.common;
+package com.xiepuhuan.reptile.common.pool;
 
 /**
  * @author xiepuhuan

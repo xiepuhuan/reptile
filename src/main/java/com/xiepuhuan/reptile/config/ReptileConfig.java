@@ -25,6 +25,10 @@ public class ReptileConfig {
 
     private int threadCount;
 
+    private DeploymentModeEnum deploymentMode;
+
+    private RedisConfig redisConfig;
+
     private Scheduler scheduler;
 
     private Downloader downloader;
@@ -33,12 +37,15 @@ public class ReptileConfig {
 
     private Consumer consumer;
 
-    private ReptileConfig(String name, long sleepTime, boolean asynRun, int threadCount, Scheduler scheduler,
-                         Downloader downloader, List<ResponseHandler> responseHandlers, Consumer consumer) {
+    private ReptileConfig(String name, long sleepTime, boolean asynRun, int threadCount,  DeploymentModeEnum deploymentMode,
+                          RedisConfig redisConfig, Scheduler scheduler, Downloader downloader, List<ResponseHandler> responseHandlers,
+                          Consumer consumer) {
         this.name = name;
         this.sleepTime = sleepTime;
         this.asynRun = asynRun;
         this.threadCount = threadCount;
+        this.deploymentMode = deploymentMode;
+        this.redisConfig = redisConfig;
         this.scheduler = scheduler;
         this.downloader = downloader;
         this.responseHandlers = responseHandlers;
@@ -49,6 +56,8 @@ public class ReptileConfig {
         ArgUtils.notEmpty(name, "name");
         ArgUtils.check(sleepTime >= 0, "sleepTime must be greater than or equal to 0");
         ArgUtils.check(threadCount > 0, "threadCount must be greater than 0");
+        ArgUtils.notNull(deploymentMode, "deploymentMode");
+        redisConfig.check();
         ArgUtils.notNull(scheduler, "scheduler");
         ArgUtils.notNull(downloader, "downloader");
         ArgUtils.notNull(responseHandlers, "responseHandlers");
@@ -70,6 +79,14 @@ public class ReptileConfig {
 
     public int getThreadCount() {
         return threadCount;
+    }
+
+    public DeploymentModeEnum getDeploymentMode() {
+        return deploymentMode;
+    }
+
+    public RedisConfig getRedisConfig() {
+        return redisConfig;
     }
 
     public Scheduler getScheduler() {
@@ -99,6 +116,10 @@ public class ReptileConfig {
 
         private int threadCount;
 
+        private DeploymentModeEnum deploymentMode;
+
+        private RedisConfig redisConfig;
+
         private Scheduler scheduler;
 
         private Downloader downloader;
@@ -112,6 +133,8 @@ public class ReptileConfig {
             this.sleepTime = 0;
             this.asynRun = false;
             this.threadCount = Runtime.getRuntime().availableProcessors();
+            this.deploymentMode = DeploymentModeEnum.SINGLE;
+            this.redisConfig = RedisConfig.DEFAULT_REDIS_CONFIG;
             this.scheduler = new FIFOQueueScheduler();
             this.downloader = new HttpClientDownloader();
             this.responseHandlers = new ArrayList<>();
@@ -140,6 +163,16 @@ public class ReptileConfig {
 
         public Builder setScheduler(Scheduler scheduler) {
             this.scheduler = scheduler;
+            return this;
+        }
+
+        public Builder setDeploymentMode(DeploymentModeEnum deploymentMode) {
+            this.deploymentMode = deploymentMode;
+            return this;
+        }
+
+        public Builder setRedisConfig(RedisConfig redisConfig) {
+            this.redisConfig = redisConfig;
             return this;
         }
 
@@ -172,8 +205,7 @@ public class ReptileConfig {
         }
 
         public ReptileConfig build() {
-            return new ReptileConfig(name, sleepTime, asynRun, threadCount, scheduler, downloader, responseHandlers, consumer);
+            return new ReptileConfig(name, sleepTime, asynRun, threadCount, deploymentMode,redisConfig, scheduler, downloader, responseHandlers, consumer);
         }
     }
-
 }

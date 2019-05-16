@@ -6,7 +6,7 @@
 
     <groupId>com.xiepuhuan</groupId>
     <artifactId>reptile</artifactId>
-    <version>1.0</version>
+    <version>0.2</version>
     <build>
         <plugins>
             <plugin>
@@ -74,6 +74,12 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.5.8</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.10.7</version>
         </dependency>
 
         <dependency>
