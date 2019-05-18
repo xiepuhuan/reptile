@@ -2,9 +2,7 @@ package com.xiepuhuan.reptile;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.xiepuhuan.reptile.common.redis.RedissonClientHolder;
 import com.xiepuhuan.reptile.config.DeploymentModeEnum;
-import com.xiepuhuan.reptile.config.RedisConfig;
 import com.xiepuhuan.reptile.config.ReptileConfig;
 import com.xiepuhuan.reptile.consumer.impl.ConsoleConsumer;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
@@ -13,14 +11,13 @@ import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.model.Response;
 import com.xiepuhuan.reptile.model.Result;
 import com.xiepuhuan.reptile.scheduler.impl.RedisFIFOQueueScheduler;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author xiepuhuan
  */
-class ZhihuPageHandler implements ResponseHandler {
+public class ZhihuPageHandler implements ResponseHandler {
 
     private static String[] URLS = new String[] {
             "https://www.zhihu.com/api/v4/search_v3?t=general&q=java&correction=1&offset=20&limit=20&lc_idx=26&show_all_topics=0",
@@ -62,14 +59,12 @@ class ZhihuPageHandler implements ResponseHandler {
         return true;
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        RedissonClientHolder.setup(RedisConfig.DEFAULT_REDIS_CONFIG);
-
+    public static void main(String[] args) {
         long start = System.currentTimeMillis();
 
         ReptileConfig config = ReptileConfig.Builder.cutom()
                 .setAsynRun(false)
-                .setThreadCount(4)
+                .setThreadCount(8)
                 .appendResponseHandlers(new ZhihuPageHandler())
                 .setDeploymentMode(DeploymentModeEnum.Distributed)
                 .setScheduler(new RedisFIFOQueueScheduler())

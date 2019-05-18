@@ -1,7 +1,5 @@
 package com.xiepuhuan.reptile.scheduler;
 
-import com.xiepuhuan.reptile.common.redis.RedissonClientHolder;
-import com.xiepuhuan.reptile.config.RedisConfig;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.scheduler.filter.impl.BloomRequestFilter;
 import com.xiepuhuan.reptile.scheduler.filter.impl.HashSetRequestFilter;
@@ -31,7 +29,6 @@ public class FIFOQueueSchedulerTest {
         requests.add(new Request(Request.POST_METHOD, "http://www.baidu.com/s").setBody("wd=code".getBytes()));
         requests.add(new Request(Request.GET_METHOD, "http://www.zhihu.com"));
         requests.add(new Request(Request.POST_METHOD, "http://www.zhihu.com"));
-        RedissonClientHolder.setup(RedisConfig.DEFAULT_REDIS_CONFIG);
     }
 
     @Test

@@ -86,4 +86,8 @@ public abstract class AbstractFilterScheduler implements Scheduler {
     public Request take() throws InterruptedException {
         throw new UnsupportedOperationException("Scheduler does not support take method");
     }
+
+    public RequestFilter getRequestFilter() {
+        return requestFilter;
+    }
 }

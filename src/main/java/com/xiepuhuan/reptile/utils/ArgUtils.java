@@ -7,6 +7,8 @@ import java.util.Collection;
  */
 public class ArgUtils {
 
+    private ArgUtils() {}
+
     public static void notNull(final Object object, final String name) {
         if (object == null) {
             throw new NullPointerException(name + "can be not null");

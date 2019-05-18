@@ -1,9 +1,10 @@
 package com.xiepuhuan.reptile;
 
-import com.xiepuhuan.reptile.common.redis.RedissonClientHolder;
 import com.xiepuhuan.reptile.config.DeploymentModeEnum;
 import com.xiepuhuan.reptile.config.ReptileConfig;
 import com.xiepuhuan.reptile.model.Request;
+import com.xiepuhuan.reptile.scheduler.CloseableScheduler;
+import com.xiepuhuan.reptile.scheduler.Scheduler;
 import com.xiepuhuan.reptile.utils.ArgUtils;
 import com.xiepuhuan.reptile.workflow.WorkflowFactory;
 import com.xiepuhuan.reptile.workflow.impl.DistributedWorkflowFactory;
@@ -112,7 +113,10 @@ public class Reptile implements Runnable {
         try {
             finalization.await();
             reptileConfig.getDownloader().close();
-            RedissonClientHolder.clear();
+            Scheduler scheduler = reptileConfig.getScheduler();
+            if (scheduler instanceof CloseableScheduler) {
+                ((CloseableScheduler) scheduler).close();
+            }
         } catch (InterruptedException e) {
             LOGGER.warn("Thread [{}] interrupted, crawler [{}] stopped", Thread.currentThread().getName(), reptileConfig.getName());
         }
