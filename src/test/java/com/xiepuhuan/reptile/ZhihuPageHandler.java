@@ -39,7 +39,7 @@ public class ZhihuPageHandler implements ResponseHandler {
     };
 
     @Override
-    public List<Request> handler(Response response, Result result) {
+    public List<Request> handle(Response response, Result result) {
         Content content = response.getContent();
         JSONObject jsonObject = JSON.parseObject(content.getContent(), JSONObject.class);
         result.setResults(jsonObject.getInnerMap());

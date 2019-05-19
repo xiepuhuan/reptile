@@ -25,7 +25,7 @@ public class NonResponseResponseHandler implements ResponseHandler {
     }
 
     @Override
-    public List<Request> handler(Response response, Result result) {
+    public List<Request> handle(Response response, Result result) {
 
         unhandledQueue.offer(response);
         return Collections.emptyList();

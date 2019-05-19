@@ -81,7 +81,7 @@ public class SingleWorkflow extends AbstractWorkflow {
                     Result result = new Result();
                     List<Request> requests = null;
                     try {
-                        requests = requestResponseHandler.handler(response, result);
+                        requests = requestResponseHandler.handle(response, result);
                     } catch (Exception e) {
                         LOGGER.warn("Failed to handle response: [{}]", e.getMessage());
                         continue;
