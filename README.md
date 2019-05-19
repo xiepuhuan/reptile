@@ -7,15 +7,24 @@
 
 ![Reptile.png](https://upload-images.jianshu.io/upload_images/4750376-3f10253975343c38.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+`Reptile`作为爬虫主体可在主线程运行也可以异步运行，爬虫主要有四个核心组件：
++ `Scheduler`执行请求调度，可以往其添加新的爬取请求，并支持去重处理
++ `Downloader`执行请求下载与解析响应
++ `ResponseHandler`由使用者提供实现来对响应处理，形成`Result`结果与新的爬取请求`Request`
++ `Consumer`来对处理的结果`Result`进行消费，例如持久化存储，用户可自定义其具体实现
+
+四个组件之间的关系如架构图所示，它们之间的互相调用形成一个完整的工作流并在`Workflow`线程中运行，`Reptile`爬虫会根据配置的线程数量通过线程池创建指定数量的工作流线程并发执行工作流任务。
+
 # 特性
 
 + 模块化设计，具有高度拓展性
-+ 单机多线程部署
-+ 支持集群多线程部署
++ 支持单机多线程部署
++ 支持简单集群部署
 + 配置简单清晰
 + 单机部署时，请求爬取完毕并且无其他线程产生新请求时会自动停止并清除理资源
 + 整合Jsoup，支持HTML页面解析
-+ 支持设置UserAgent池与Proxy池，并且可设置请求时随机选择或循环顺序选择UserAgent与Proxy
++ 请求调度器支持URL或请求的去重处理，提供布隆过滤器与集合去重实现，默认使用布隆过滤器，可在配置类进行指定
++ 支持设置UserAgent池与Proxy池，并且可设置请求对UserAgent与Proxy的选择策略，如随机或循环顺序选择
 
 # 快速开始
 
@@ -51,12 +60,12 @@ mvn -Dmaven.test.skip=true
 ``` java
 public class ZhihuPageHandler implements ResponseHandler {
 
-    private static String[] URLS = new String[] {
+    private static final String[] URLS = new String[] {
             "https://www.zhihu.com/api/v4/search_v3?t=general&q=java"
     };
 
     @Override
-    public List<Request> handler(Response response, Result result) {
+    public List<Request> handle(Response response, Result result) {
         Content content = response.getContent();
         JSONObject jsonObject = JSON.parseObject(content.getContent(), JSONObject.class);
         result.setResults(jsonObject.getInnerMap());
@@ -78,15 +87,65 @@ public class ZhihuPageHandler implements ResponseHandler {
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
-        //　构建Reptile爬虫配置类，
+        // 构建Reptile爬虫配置类，
         ReptileConfig config = ReptileConfig.Builder.cutom()
                 .setThreadCount(8)
                 .appendResponseHandlers(new ZhihuPageHandler())
                 .setDeploymentMode(DeploymentModeEnum.SINGLE)
                 .setConsumer(new ConsoleConsumer())
                 .build();
-        
-        //　构建Reptile爬虫对象并添加爬去的URL
+        // 构建Reptile爬虫对象并添加初始爬取URL
+        Reptile reptile = Reptile.create(config).addUrls(URLS);
+        // 启动爬虫
+        reptile.start();
+    }
+}
+```
+
+## 分布式部署
+
+分布式部署时，创建配置类时需要通过`setDeploymentMode`方法指定部署模式为`DeploymentModeEnum.Distributed`，并且需要通过`setScheduler`方法设置一个Redis队列调度器，可以使用`RedisFIFOQueueScheduler`作为实现。
+
+``` java
+public class ZhihuPageHandler implements ResponseHandler {
+
+    private static final String[] URLS = new String[] {
+            "https://www.zhihu.com/api/v4/search_v3?t=general&q=java"
+    };
+
+    @Override
+    public List<Request> handle(Response response, Result result) {
+        Content content = response.getContent();
+        JSONObject jsonObject = JSON.parseObject(content.getContent(), JSONObject.class);
+        result.setResults(jsonObject.getInnerMap());
+
+        JSONObject paging = jsonObject.getJSONObject("paging");
+
+        if (!paging.getBoolean("is_end")) {
+            List<Request> requests = new ArrayList<>();
+            requests.add(new Request(paging.getString("next")));
+            return requests;
+        }
+        return null;
+    }
+
+    @Override
+    public boolean isSupport(Request request, Response response) {
+        return true;
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+
+        // 构建Reptile爬虫配置类，
+
+        ReptileConfig config = ReptileConfig.Builder.cutom()
+                .setThreadCount(8)
+                .appendResponseHandlers(new ZhihuPageHandler())
+                .setDeploymentMode(DeploymentModeEnum.Distributed)
+                .setScheduler(new RedisFIFOQueueScheduler())
+                .setConsumer(new ConsoleConsumer())
+                .build();
+        // 构建Reptile爬虫对象并添加爬去的URL
         Reptile reptile = Reptile.create(config).addUrls(URLS);
         // 启动爬虫
         reptile.start();
