@@ -147,7 +147,7 @@ public class DownloaderConfig {
         private List<Header> headers;
 
         Builder() {
-            this.generalUserAgent = UserAgentConstants.CHROME_FOR_MAC;
+            this.generalUserAgent = UserAgentConstants.CHROME_FOR_LINUX;
             this.userAgentPoolConfig = null;
             this.generalProxy = null;
             this.proxyPoolConfig = null;

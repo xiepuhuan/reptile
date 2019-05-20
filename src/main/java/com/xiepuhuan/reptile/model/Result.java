@@ -12,6 +12,8 @@ public class Result {
 
     private Map<String, Object> results;
 
+    private boolean ignore = false;
+
     public Result(Map<String, Object> results) {
         ArgUtils.notNull(results, "results");
         this.results = results;
@@ -42,6 +44,15 @@ public class Result {
     public Result setResults(Map<String, Object> results) {
         this.results = results;
         return this;
+    }
+
+    public Result setIgnore(boolean ignore) {
+        this.ignore = ignore;
+        return this;
+    }
+
+    public boolean isIgnore() {
+        return ignore;
     }
 
     @Override

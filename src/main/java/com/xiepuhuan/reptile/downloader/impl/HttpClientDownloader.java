@@ -1,9 +1,9 @@
 package com.xiepuhuan.reptile.downloader.impl;
 
-import com.xiepuhuan.reptile.config.DownloaderConfig;
-import com.xiepuhuan.reptile.downloader.Downloader;
 import com.xiepuhuan.reptile.common.pool.Pool;
 import com.xiepuhuan.reptile.common.pool.impl.FixedPool;
+import com.xiepuhuan.reptile.config.DownloaderConfig;
+import com.xiepuhuan.reptile.downloader.CloseableDownloader;
 import com.xiepuhuan.reptile.downloader.constants.UserAgentConstants;
 import com.xiepuhuan.reptile.downloader.model.Proxy;
 import com.xiepuhuan.reptile.model.Content;
@@ -47,7 +47,7 @@ import javax.net.ssl.SSLContext;
 /**
  * @author xiepuhuan
  */
-public class HttpClientDownloader implements Downloader {
+public class HttpClientDownloader implements CloseableDownloader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpClientDownloader.class);
 
@@ -92,7 +92,8 @@ public class HttpClientDownloader implements Downloader {
         }
 
         RequestBuilder requestBuilder = RequestBuilder.create(request.getMethod())
-                .setUri(request.getUrl());
+                .setUri(request.getUrl())
+                .setHeader("cookie", "d_c0=\"AFDiaIA5ng2PTgyuejWKI0qwUESDkyWifXk=|1526736573\"; _zap=f87e6049-36e6-4461-b497-36c543a42485; __gads=ID=c5aaa62037f66581:T=1547031642:S=ALNI_MYC8p9OWvWR7nnsd3vM0b3RODGm_g; __utmv=51854390.100--|2=registration_date=20160811=1^3=entry_date=20160811=1; _xsrf=87c7f562-07c1-4187-8852-29a8732b245c; q_c1=aafc3877d9d14425a8302bb2444da49b|1557479793000|1526736578000; __utma=51854390.1355650844.1554915899.1554915899.1558253321.2; __utmc=51854390; __utmz=51854390.1558253321.2.2.utmcsr=zhihu.com|utmccn=(referral)|utmcmd=referral|utmcct=/; tst=h; anc_cap_id=efa677707ebd432fbd72de947968ea69; capsion_ticket=\"2|1:0|10:1558277537|14:capsion_ticket|44:MTBkNjcxYjBkMjhjNGVmYWEyNTM2YTMzMGZjODM5M2Y=|4255cc0232411ebf74da07625c85febad95f4117fec6ede656eb655779493ece\"; z_c0=\"2|1:0|10:1558277545|4:z_c0|92:Mi4xTXdOWUF3QUFBQUFBVU9Kb2dEbWVEU1lBQUFCZ0FsVk5xYnZPWFFCOFdLYkZkRVlIUW9hdGpPN3doT1gxWlJTSjNn|c9d7b62f1d2f127980f35405818a91f6de7caf1a66d01d13a4110abeea52641c\"; tgw_l7_route=4860b599c6644634a0abcd4d10d37251");
 
         if (proxyPool != null) {
             requestBuilder.setConfig(RequestConfig.custom().setProxy(proxyPool.selectOne().buildHttpHost()).build());
