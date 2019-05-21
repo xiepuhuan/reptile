@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface ResponseHandler {
 
-     List<Request> handle(Response response, Result result);
+     List<Request> handle(Response response, Result result) throws Throwable;
 
      boolean isSupport(Request request, Response response);
 }

@@ -37,6 +37,8 @@ public class Reptile implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Reptile.class);
 
+    private static final int STARTING = 2;
+
     private static final int RUNNING = 1;
 
     private static final int STOPPED = 0;
@@ -61,7 +63,7 @@ public class Reptile implements Runnable {
         this.reptileConfig = reptileConfig;
         this.executorService = buildExecutor();
         this.state = new AtomicInteger(STOPPED);
-        this.finalization = new CountDownLatch(reptileConfig.getThreadCount());
+        this.finalization = new CountDownLatch(getThreadCount());
         this.activeThreadCount = new AtomicInteger(0);
 
     }
@@ -71,58 +73,59 @@ public class Reptile implements Runnable {
     }
 
     private ExecutorService buildExecutor() {
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(reptileConfig.getThreadCount(),
-                reptileConfig.getThreadCount(), 1L, TimeUnit.NANOSECONDS,
-                new SynchronousQueue<>(), new WorkflowThreadFactory(reptileConfig.getName()));
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(getThreadCount(),
+                getThreadCount(), 1L, TimeUnit.NANOSECONDS,
+                new SynchronousQueue<>(), new WorkflowThreadFactory(getName()));
         executor.allowCoreThreadTimeOut(true);
         return executor;
     }
 
     public void start() {
-        if (!state.compareAndSet(STOPPED, RUNNING)) {
-            LOGGER.error("Reptile [{}] is already running", reptileConfig.getName());
+        if (!state.compareAndSet(STOPPED, STARTING)) {
+            LOGGER.error("Reptile [{}] has started", getName());
         }
 
-        if (reptileConfig.isAsynRun()) {
-            thread = new Thread(this, reptileConfig.getName() + "-thread");
+        LOGGER.info("Reptile [{}] Startup", getName());
+        if (isAsynRun()) {
+            thread = new Thread(this, getName() + "-thread");
             thread.start();
         } else {
             thread = Thread.currentThread();
-            thread.setName(reptileConfig.getName() + "-thread");
+            thread.setName(getName() + "-thread");
             run();
         }
     }
 
 
     public void stop() {
-        if (!state.compareAndSet(RUNNING, STOP)) {
-            LOGGER.error("Reptile [{}] has stopped", reptileConfig.getName());
+        if (!state.compareAndSet(RUNNING, STOP) && !state.compareAndSet(STARTING, STOP)) {
+            LOGGER.error("Reptile [{}] has stopped", getName());
             return;
         }
 
-        LOGGER.info("Reptile [{}] is stopping", reptileConfig.getName());
+        LOGGER.info("Reptile [{}] is stopping", getName());
         executorService.shutdownNow();
         state.set(STOPPED);
-        LOGGER.info("Reptile [{}] has stopped", reptileConfig.getName());
+        LOGGER.info("Reptile [{}] has stopped", getName());
     }
 
     @Override
     public void run() {
-        if (state.get() != RUNNING) {
-            throw new IllegalStateException("The current state is not running");
+        if (state.get() != STARTING) {
+            throw new IllegalStateException("The current state is not starting");
         }
 
-        LOGGER.info("Reptile [{}] start up", reptileConfig.getName());
+        LOGGER.info("Reptile [{}] is running", getName());
 
         WorkflowFactory workflowFactory = buildWorkflow(reptileConfig);
-        for (int i = 0; i < reptileConfig.getThreadCount(); ++i) {
+        for (int i = 0; i < getThreadCount(); ++i) {
             executorService.execute(workflowFactory.newWorkflow());
         }
         try {
             finalization.await();
             close();
         } catch (InterruptedException e) {
-            LOGGER.warn("Thread [{}] interrupted, crawler [{}] stopped", Thread.currentThread().getName(), reptileConfig.getName());
+            LOGGER.warn("Thread [{}] interrupted, crawler [{}] stopped", Thread.currentThread().getName(), getName());
         }
     }
 
@@ -169,22 +172,22 @@ public class Reptile implements Runnable {
     }
 
     public Reptile addUrls(String... urls) {
-        reptileConfig.getScheduler().push(Arrays.stream(urls).map(Request::new).toArray(Request[]::new));
+        getScheduler().push(Arrays.stream(urls).map(Request::new).toArray(Request[]::new));
         return this;
     }
 
     public Reptile addRequests(Request... requests) {
-        reptileConfig.getScheduler().push(requests);
+        getScheduler().push(requests);
         return this;
     }
 
     public Reptile addRequests(Collection<Request> requests) {
-        reptileConfig.getScheduler().push(requests);
+        getScheduler().push(requests);
         return this;
     }
 
     public Reptile addUrls(Collection<String> urls) {
-        reptileConfig.getScheduler().push(urls.stream().map(Request::new).collect(Collectors.toList()));
+        getScheduler().push(urls.stream().map(Request::new).collect(Collectors.toList()));
         return this;
     }
 
@@ -200,27 +203,55 @@ public class Reptile implements Runnable {
     }
 
     private CloseableScheduler getCloseableScheduler() {
-        Scheduler scheduler = reptileConfig.getScheduler();
+        Scheduler scheduler = getScheduler();
         return scheduler instanceof CloseableScheduler ? (CloseableScheduler) scheduler : null;
     }
 
     private CloseableDownloader getCloseableDownloader() {
-        Downloader downloader = reptileConfig.getDownloader();
+        Downloader downloader = getDownloader();
         return downloader instanceof CloseableDownloader ? (CloseableDownloader) downloader : null;
     }
 
     private CloseableConsumer getCloseableConsumer() {
-        Consumer consumer = reptileConfig.getConsumer();
+        Consumer consumer = getConsumer();
         return consumer instanceof CloseableConsumer ? (CloseableConsumer) consumer : null;
     }
 
     // 获取所有可关闭的ResponseHandler
     private List<CloseableResponseHandler> getCloseableResponseHandler() {
-        List<ResponseHandler> responseHandlers = reptileConfig.getResponseHandlers();
+        List<ResponseHandler> responseHandlers = getResponseHandlers();
 
         return responseHandlers.stream()
                 .filter(CloseableResponseHandler.class::isInstance)
                 .map(CloseableResponseHandler.class::cast)
                 .collect(Collectors.toList());
+    }
+
+    public String getName() {
+        return reptileConfig.getName();
+    }
+
+    public int getThreadCount() {
+        return reptileConfig.getThreadCount();
+    }
+
+    public Scheduler getScheduler() {
+        return reptileConfig.getScheduler();
+    }
+
+    public Downloader getDownloader() {
+        return reptileConfig.getDownloader();
+    }
+
+    public Consumer getConsumer() {
+        return reptileConfig.getConsumer();
+    }
+
+    public List<ResponseHandler> getResponseHandlers() {
+        return reptileConfig.getResponseHandlers();
+    }
+
+    public boolean isAsynRun() {
+        return reptileConfig.isAsynRun();
     }
 }

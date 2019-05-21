@@ -7,7 +7,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 /**
  * @author xiepuhuan
  */
-public class RedisConfig {
+public final class RedisConfig {
 
     public static final RedisConfig DEFAULT_REDIS_CONFIG = Builder.create();
 
@@ -23,7 +23,7 @@ public class RedisConfig {
 
     public void check() {
         ArgUtils.notEmpty(ip, "redis ip");
-        ArgUtils.check(port > 0 && port < 65535, "redis port");
+        ArgUtils.check(port > 0 && port < 65535, "redis port　must be greater than 0 and less than 65535");
     }
 
     private RedisConfig(String ip, int port, String password, int database, int connectionPoolSize) {

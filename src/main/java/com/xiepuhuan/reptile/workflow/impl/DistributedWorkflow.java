@@ -4,6 +4,7 @@ import com.xiepuhuan.reptile.config.ReptileConfig;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.model.Response;
+import com.xiepuhuan.reptile.model.ResponseContext;
 import com.xiepuhuan.reptile.model.Result;
 import java.io.IOException;
 import java.util.List;
@@ -53,16 +54,16 @@ public class DistributedWorkflow extends AbstractWorkflow {
                 List<Request> requests = null;
                 try {
                     requests = requestResponseHandler.handle(response, result);
-                } catch (Exception e) {
-                    LOGGER.warn("Failed to handle response: [{}]", e.getMessage());
+                } catch (Throwable throwable) {
+                    LOGGER.warn("Failed to handle response: [{}]", throwable.getMessage());
                     continue;
                 }
                 getScheduler().put(requests);
 
                 try {
                     getConsumer().consume(result);
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to comsume result: [{}]", e.getMessage());
+                } catch (Throwable throwable) {
+                    LOGGER.warn("Failed to comsume result: [{}]", throwable.getMessage());
                 }
 
                 if (getSleepTime() > 0) {

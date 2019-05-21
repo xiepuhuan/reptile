@@ -63,7 +63,6 @@ public class SingleWorkflow extends AbstractWorkflow {
                     continue;
                 }
                 Response response = null;
-
                 try {
                     response = getDownloader().download(request);
                 } catch (IOException | IllegalStateException e) {
@@ -82,8 +81,8 @@ public class SingleWorkflow extends AbstractWorkflow {
                 List<Request> requests = null;
                 try {
                     requests = requestResponseHandler.handle(response, result);
-                } catch (Exception e) {
-                    LOGGER.warn("Failed to handle response: [{}]", e.getMessage());
+                } catch (Throwable throwable) {
+                    LOGGER.warn("Failed to handle response: [{}]", throwable.getMessage());
                     continue;
                 }
 
@@ -99,8 +98,8 @@ public class SingleWorkflow extends AbstractWorkflow {
                     if (!result.isIgnore()) {
                         getConsumer().consume(result);
                     }
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to comsume result: [{}]", e.getMessage());
+                } catch (Throwable throwable) {
+                    LOGGER.warn("Failed to comsume result: [{}]", throwable.getMessage());
                 }
 
                 if (getSleepTime() > 0) {

@@ -10,8 +10,15 @@ import java.util.Map;
 @SuppressWarnings("all")
 public class Result {
 
+    public static final String MONGODB_DATABASE_COLLECTION_NAME = "mongodbCollectionName";
+
     private Map<String, Object> results;
 
+    private Map<String, Object> extendedFields;
+
+    /**
+     * 当ignore为true时，该结果会被忽略，即不会被消费
+     */
     private boolean ignore = false;
 
     public Result(Map<String, Object> results) {
@@ -44,6 +51,26 @@ public class Result {
     public Result setResults(Map<String, Object> results) {
         this.results = results;
         return this;
+    }
+
+    public <T> Result setExtendedField(String name, T value) {
+        if (extendedFields == null) {
+            extendedFields = new HashMap<>();
+        }
+        this.results.put(name, value);
+        return this;
+    }
+
+    public <T> T getExtendedField(String name) {
+        if (extendedFields == null) {
+            return null;
+        }
+
+        Object value = results.get(name);
+        if (value == null) {
+            return null;
+        }
+        return (T) value;
     }
 
     public Result setIgnore(boolean ignore) {
