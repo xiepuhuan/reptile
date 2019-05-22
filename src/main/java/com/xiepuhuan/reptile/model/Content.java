@@ -55,6 +55,10 @@ public class Content {
             return htmlContent;
         }
 
+        if (getTextContent() == null) {
+            return null;
+        }
+
         if (ContentType.TEXT_HTML.getMimeType().equals(contentType.getMimeType())) {
             htmlContent = Jsoup.parse(getTextContent());
         }

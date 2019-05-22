@@ -3,6 +3,7 @@ package com.xiepuhuan.reptile.model;
 import com.xiepuhuan.reptile.utils.ArgUtils;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author xiepuhuan
@@ -14,7 +15,7 @@ public class Result {
 
     private Map<String, Object> results;
 
-    private Map<String, Object> extendedFields;
+    private volatile Map<String, Object> extendedFields;
 
     /**
      * 当ignore为true时，该结果会被忽略，即不会被消费
@@ -55,9 +56,9 @@ public class Result {
 
     public <T> Result setExtendedField(String name, T value) {
         if (extendedFields == null) {
-            extendedFields = new HashMap<>();
+            extendedFields = new ConcurrentHashMap<>();
         }
-        this.results.put(name, value);
+        this.extendedFields.put(name, value);
         return this;
     }
 
@@ -66,7 +67,7 @@ public class Result {
             return null;
         }
 
-        Object value = results.get(name);
+        Object value = extendedFields.get(name);
         if (value == null) {
             return null;
         }

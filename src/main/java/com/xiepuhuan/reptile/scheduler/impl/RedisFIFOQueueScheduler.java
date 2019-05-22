@@ -37,7 +37,7 @@ public class RedisFIFOQueueScheduler extends AbstractFilterScheduler implements 
     }
 
     @Override
-    public void push(Request request) {
+    public void pushUnfiltered(Request request) {
         queue.offer(request);
     }
 
@@ -47,7 +47,7 @@ public class RedisFIFOQueueScheduler extends AbstractFilterScheduler implements 
     }
 
     @Override
-    public void put(Request requests) throws InterruptedException {
+    public void putUnfiltered(Request requests) throws InterruptedException {
         queue.put(requests);
     }
 
@@ -61,6 +61,7 @@ public class RedisFIFOQueueScheduler extends AbstractFilterScheduler implements 
         return queue.size();
     }
 
+    @Override
     public void close() {
         RedisClientManager.shutdownRedisClient(redisConfig);
 

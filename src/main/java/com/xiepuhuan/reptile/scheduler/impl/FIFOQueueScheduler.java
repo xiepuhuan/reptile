@@ -36,13 +36,23 @@ public class FIFOQueueScheduler extends AbstractFilterScheduler {
     }
 
     @Override
-    public void push(Request request) {
+    public void pushUnfiltered(Request request) {
         queue.offer(request);
     }
 
     @Override
     public Request poll() {
         return queue.poll();
+    }
+
+    @Override
+    public void putUnfiltered(Request request) throws InterruptedException {
+        throw new UnsupportedOperationException("FIFOQueueScheduler does not support put method");
+    }
+
+    @Override
+    public Request take() throws InterruptedException {
+        throw new UnsupportedOperationException("FIFOQueueScheduler does not support take method");
     }
 
     @Override

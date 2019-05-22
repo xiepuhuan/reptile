@@ -4,6 +4,7 @@ import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.scheduler.Scheduler;
 import com.xiepuhuan.reptile.scheduler.filter.RequestFilter;
 import com.xiepuhuan.reptile.scheduler.filter.impl.BloomRequestFilter;
+import java.util.Arrays;
 import java.util.Collection;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -24,30 +25,44 @@ public abstract class AbstractFilterScheduler implements Scheduler {
         this.requestFilter = requestFilter;
     }
 
+    public boolean isNotFilter(Request request) {
+        return !requestFilter.filter(request);
+    }
+
+    public abstract void pushUnfiltered(Request request);
+
+    public abstract void putUnfiltered(Request request) throws InterruptedException;
+
+    @Override
+    public void push(Request request) {
+        if (isNotFilter(request)) {
+            pushUnfiltered(request);
+        }
+    }
+
     @Override
     public void push(Request... requests) {
         if (ObjectUtils.isEmpty(requests)) {
             return;
         }
 
-        for (Request request : requests) {
-            if (!requestFilter.filter(request)) {
-                push(request);
-            }
-        }
+        Arrays.stream(requests).forEach(this::push);
     }
 
     @Override
     public void push(Collection<Request> requests) {
-
         if (CollectionUtils.isEmpty(requests)) {
             return;
         }
 
-        for (Request request : requests) {
-            if (!requestFilter.filter(request)) {
-                push(request);
-            }
+        requests.forEach(this::push);
+    }
+
+
+    @Override
+    public void put(Request request) throws InterruptedException {
+        if (isNotFilter(request)) {
+            putUnfiltered(request);
         }
     }
 
@@ -58,9 +73,7 @@ public abstract class AbstractFilterScheduler implements Scheduler {
         }
 
         for (Request request : requests) {
-            if (!requestFilter.filter(request)) {
-                put(request);
-            }
+            put(request);
         }
     }
 
@@ -71,20 +84,8 @@ public abstract class AbstractFilterScheduler implements Scheduler {
         }
 
         for (Request request : requests) {
-            if (!requestFilter.filter(request)) {
-                put(request);
-            }
+            put(request);
         }
-    }
-
-    @Override
-    public void put(Request requests) throws InterruptedException {
-        throw new UnsupportedOperationException("Scheduler does not support put method");
-    }
-
-    @Override
-    public Request take() throws InterruptedException {
-        throw new UnsupportedOperationException("Scheduler does not support take method");
     }
 
     public RequestFilter getRequestFilter() {
