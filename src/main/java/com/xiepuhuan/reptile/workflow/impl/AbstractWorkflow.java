@@ -5,6 +5,7 @@ import com.xiepuhuan.reptile.downloader.Downloader;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.model.Response;
+import com.xiepuhuan.reptile.model.ResponseContext;
 import com.xiepuhuan.reptile.scheduler.Scheduler;
 import com.xiepuhuan.reptile.workflow.Workflow;
 import java.util.List;
@@ -66,10 +67,10 @@ public abstract class AbstractWorkflow implements Workflow {
         return sleepTime;
     }
 
-    protected ResponseHandler selectHandler(Request request, Response response) {
+    protected ResponseHandler selectHandler(ResponseContext responseContext) {
 
         for (ResponseHandler responseHandler : getResponseHandlers()) {
-            if (responseHandler.isSupport(request, response)) {
+            if (responseHandler.isSupport(responseContext)) {
                 return responseHandler;
             }
         }

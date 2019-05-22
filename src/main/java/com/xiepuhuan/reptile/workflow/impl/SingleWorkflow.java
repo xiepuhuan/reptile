@@ -4,6 +4,7 @@ import com.xiepuhuan.reptile.config.ReptileConfig;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.model.Response;
+import com.xiepuhuan.reptile.model.ResponseContext;
 import com.xiepuhuan.reptile.model.Result;
 import java.io.IOException;
 import java.util.List;
@@ -69,8 +70,8 @@ public class SingleWorkflow extends AbstractWorkflow {
                     LOGGER.warn("Failed to download response about request [{}]: {}", request.toString(), e.getMessage());
                     continue;
                 }
-
-                ResponseHandler requestResponseHandler = selectHandler(request, response);
+                ResponseContext responseContext = new ResponseContext(request, response);
+                ResponseHandler requestResponseHandler = selectHandler(responseContext);
 
                 if (requestResponseHandler == null) {
                     LOGGER.warn("No response was found for the response handler to handle the request [{}]", request.toString());
@@ -80,7 +81,7 @@ public class SingleWorkflow extends AbstractWorkflow {
                 Result result = new Result();
                 List<Request> requests = null;
                 try {
-                    requests = requestResponseHandler.handle(response, result);
+                    requests = requestResponseHandler.handle(responseContext, result);
                 } catch (Throwable throwable) {
                     LOGGER.warn("Failed to handle response: [{}]", throwable.getMessage());
                     continue;

@@ -6,10 +6,8 @@ import com.xiepuhuan.reptile.config.DeploymentModeEnum;
 import com.xiepuhuan.reptile.config.ReptileConfig;
 import com.xiepuhuan.reptile.consumer.impl.ConsoleConsumer;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
-import com.xiepuhuan.reptile.model.Content;
-import com.xiepuhuan.reptile.model.Request;
-import com.xiepuhuan.reptile.model.Response;
-import com.xiepuhuan.reptile.model.Result;
+import com.xiepuhuan.reptile.model.*;
+import com.xiepuhuan.reptile.scheduler.impl.FIFOQueueScheduler;
 import com.xiepuhuan.reptile.scheduler.impl.RedisFIFOQueueScheduler;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,8 +37,8 @@ public class ZhihuPageHandler implements ResponseHandler {
     };
 
     @Override
-    public List<Request> handle(Response response, Result result) {
-        Content content = response.getContent();
+    public List<Request> handle(ResponseContext responseContext, Result result) {
+        Content content = responseContext.getResponse().getContent();
         JSONObject jsonObject = JSON.parseObject(content.getContent(), JSONObject.class);
         result.setResults(jsonObject.getInnerMap());
 
@@ -55,7 +53,7 @@ public class ZhihuPageHandler implements ResponseHandler {
     }
 
     @Override
-    public boolean isSupport(Request request, Response response) {
+    public boolean isSupport(ResponseContext responseContext) {
         return true;
     }
 
@@ -66,8 +64,8 @@ public class ZhihuPageHandler implements ResponseHandler {
                 .setAsynRun(false)
                 .setThreadCount(8)
                 .appendResponseHandlers(new ZhihuPageHandler())
-                .setDeploymentMode(DeploymentModeEnum.Distributed)
-                .setScheduler(new RedisFIFOQueueScheduler())
+                .setDeploymentMode(DeploymentModeEnum.SINGLE)
+                .setScheduler(new FIFOQueueScheduler())
                 .setConsumer(new ConsoleConsumer())
                 .build();
         Reptile reptile = Reptile.create(config).addUrls(URLS);

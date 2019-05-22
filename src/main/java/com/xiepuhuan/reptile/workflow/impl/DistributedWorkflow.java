@@ -43,7 +43,8 @@ public class DistributedWorkflow extends AbstractWorkflow {
                     continue;
                 }
 
-                ResponseHandler requestResponseHandler = selectHandler(request, response);
+                ResponseContext responseContext = new ResponseContext(request, response);
+                ResponseHandler requestResponseHandler = selectHandler(responseContext);
 
                 if (requestResponseHandler == null) {
                     LOGGER.warn("No response was found for the response handler to handle the request [{}], the nonResponseResponseHandler will be used", request.toString());
@@ -53,7 +54,7 @@ public class DistributedWorkflow extends AbstractWorkflow {
                 Result result = new Result();
                 List<Request> requests = null;
                 try {
-                    requests = requestResponseHandler.handle(response, result);
+                    requests = requestResponseHandler.handle(responseContext, result);
                 } catch (Throwable throwable) {
                     LOGGER.warn("Failed to handle response: [{}]", throwable.getMessage());
                     continue;

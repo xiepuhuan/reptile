@@ -2,6 +2,8 @@ package com.xiepuhuan.reptile.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.cookie.Cookie;
@@ -28,6 +30,8 @@ public class Request {
     private ContentType contentType;
 
     private byte[] body;
+
+    private volatile Map<String, Object> attributes;
 
     private Request() {}
 
@@ -79,6 +83,27 @@ public class Request {
         }
         headers.add(new BasicHeader(name, value));
         return this;
+    }
+
+    public <T> Request setAttribute(String name, T value) {
+        if (attributes == null) {
+            attributes = new ConcurrentHashMap<>();
+        }
+        this.attributes.put(name, value);
+        return this;
+    }
+
+    public <T> T getAttribute(String name) {
+        if (attributes == null) {
+            return null;
+        }
+
+        Object value = attributes.get(name);
+        if (value == null) {
+            return null;
+        }
+
+        return (T) value;
     }
 
     public ContentType getContentType() {

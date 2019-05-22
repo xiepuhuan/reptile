@@ -3,6 +3,7 @@ package com.xiepuhuan.reptile.handler.impl;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.model.Response;
+import com.xiepuhuan.reptile.model.ResponseContext;
 import com.xiepuhuan.reptile.model.Result;
 import java.util.Collections;
 import java.util.List;
@@ -25,14 +26,14 @@ public class NonResponseResponseHandler implements ResponseHandler {
     }
 
     @Override
-    public List<Request> handle(Response response, Result result) {
+    public List<Request> handle(ResponseContext responseContext, Result result) {
 
-        unhandledQueue.offer(response);
+        unhandledQueue.offer(responseContext.getResponse());
         return Collections.emptyList();
     }
 
     @Override
-    public boolean isSupport(Request request, Response response) {
+    public boolean isSupport(ResponseContext responseContext) {
         return true;
     }
 }
