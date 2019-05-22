@@ -21,10 +21,11 @@
 + 支持单机多线程部署
 + 支持简单集群部署
 + 配置简单清晰
-+ 单机部署时，请求爬取完毕并且无其他线程产生新请求时会自动停止并清除理资源
++ 单机部署时，请求爬取完毕并且无其他线程产生新请求时会自动停止爬虫并关闭资源
 + 整合Jsoup，支持HTML页面解析
 + 请求调度器支持URL或请求的去重处理，提供布隆过滤器与集合去重实现，默认使用布隆过滤器，可在配置类进行指定
 + 支持设置UserAgent池与Proxy池，并且可设置请求对UserAgent与Proxy的选择策略，如随机或循环顺序选择
++ 当爬取请求出现IO异常时，支持请求重试，可在配置类指定请求重试次数
 
 # 快速开始
 
@@ -49,10 +50,15 @@ mvn -Dmaven.test.skip=true
 # 使用方式
 
 1. 实现`ResponseHandler`接口，重写`isSupport`与`handle`方法。
-    + `isSupport`方法根据`request`和`response`参数判断是否需要处理该响应，是则返回`true`，否则返回`false`。
+    + `isSupport`方法根据`reponseContext`参数对象判断是否需要处理该响应，是则返回`true`，否则返回`false`。
     + `handle`方法处理该响应，并将处理结果存储到`result`，如果从响应中有提取到要爬取的新请求则将其作为返回值返回。
     + 如果没有找到支持处理该响应的处理器则响应会被忽略。
-2. 实现`Consumer`接口，重写`consume`方法，执行对数据的消费，可在该方法中对响应处理结果进行持久化等操作，目前提供了`ConsoleConsumer`与`JsonFileConsumer`等实现，默认使用`ConsoleConsumer`。
+2. 实现`Consumer`接口，重写`consume`方法，执行对数据的消费，可在该方法中对响应处理结果进行持久化等操作，目前提供了`ConsoleConsumer`,`JsonFileConsumer`, `MongoDBConsumer`等实现，默认使用`ConsoleConsumer`。
+
+# 推荐
+
++ 推荐使用`MongoDBConsumer`作为爬虫消费者, 因为其面向文档存储, 文档可嵌套文档、数组, 并且预先不需要建表, 这些特性非常适合爬虫爬取的不确定网络数据, JSON格式数据的存储。
++ 若是使用MongoDBConsumer作为数据消费者, 那么必须在`ResponseHandler`中的`handle`方法中调用`result`的`setExtendedField`方法并使用`ResultExtendedField.REQUEST_RETRY_COUNT`常量作为键设置数据存储的表名称。
 
 # 示例
 
@@ -63,6 +69,7 @@ public class ZhihuPageHandler implements ResponseHandler {
     private static final String[] URLS = new String[] {
             "https://www.zhihu.com/api/v4/search_v3?t=general&q=java"
     };
+
 
     @Override
     public List<Request> handle(Response response, Result result) {
