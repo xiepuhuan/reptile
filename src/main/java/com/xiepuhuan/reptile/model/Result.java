@@ -11,8 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @SuppressWarnings("all")
 public class Result {
 
-    public static final String MONGODB_DATABASE_COLLECTION_NAME = "mongodbCollectionName";
-
     private Map<String, Object> results;
 
     private volatile Map<String, Object> extendedFields;
