@@ -25,6 +25,8 @@ public class ReptileConfig {
 
     private int threadCount;
 
+    private int retryCount;
+
     private DeploymentModeEnum deploymentMode;
 
     private Scheduler scheduler;
@@ -35,12 +37,13 @@ public class ReptileConfig {
 
     private Consumer consumer;
 
-    private ReptileConfig(String name, long sleepTime, boolean asynRun, int threadCount,  DeploymentModeEnum deploymentMode,
+    private ReptileConfig(String name, long sleepTime, boolean asynRun, int threadCount, int retryCount,  DeploymentModeEnum deploymentMode,
                           Scheduler scheduler, Downloader downloader, List<ResponseHandler> responseHandlers, Consumer consumer) {
         this.name = name;
         this.sleepTime = sleepTime;
         this.asynRun = asynRun;
         this.threadCount = threadCount;
+        this.retryCount = retryCount;
         this.deploymentMode = deploymentMode;
         this.scheduler = scheduler;
         this.downloader = downloader;
@@ -52,6 +55,7 @@ public class ReptileConfig {
         ArgUtils.notEmpty(name, "name");
         ArgUtils.check(sleepTime >= 0, "sleepTime must be greater than or equal to 0");
         ArgUtils.check(threadCount > 0, "threadCount must be greater than 0");
+        ArgUtils.check(retryCount >= 0, "retryCount must be greater than or equal to 0");
         ArgUtils.notNull(deploymentMode, "deploymentMode");
         ArgUtils.notNull(scheduler, "scheduler");
         ArgUtils.notNull(downloader, "downloader");
@@ -74,6 +78,10 @@ public class ReptileConfig {
 
     public int getThreadCount() {
         return threadCount;
+    }
+
+    public int getRetryCount() {
+        return retryCount;
     }
 
     public DeploymentModeEnum getDeploymentMode() {
@@ -107,6 +115,8 @@ public class ReptileConfig {
 
         private int threadCount;
 
+        private int retryCount;
+
         private DeploymentModeEnum deploymentMode;
 
         private Scheduler scheduler;
@@ -122,6 +132,7 @@ public class ReptileConfig {
             this.sleepTime = 0;
             this.asynRun = false;
             this.threadCount = Runtime.getRuntime().availableProcessors();
+            this.retryCount = 0;
             this.deploymentMode = DeploymentModeEnum.SINGLE;
             this.scheduler = new FIFOQueueScheduler();
             this.downloader = new HttpClientDownloader();
@@ -146,6 +157,11 @@ public class ReptileConfig {
 
         public Builder setThreadCount(int threadCount) {
             this.threadCount = threadCount;
+            return this;
+        }
+
+        public Builder setRetryCount(int retryCount) {
+            this.retryCount = retryCount;
             return this;
         }
 
@@ -188,7 +204,7 @@ public class ReptileConfig {
         }
 
         public ReptileConfig build() {
-            return new ReptileConfig(name, sleepTime, asynRun, threadCount, deploymentMode, scheduler, downloader, responseHandlers, consumer);
+            return new ReptileConfig(name, sleepTime, asynRun, threadCount, retryCount, deploymentMode, scheduler, downloader, responseHandlers, consumer);
         }
     }
 }

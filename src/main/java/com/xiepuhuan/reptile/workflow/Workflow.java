@@ -4,6 +4,7 @@ import com.xiepuhuan.reptile.consumer.Consumer;
 import com.xiepuhuan.reptile.downloader.Downloader;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
 import com.xiepuhuan.reptile.scheduler.Scheduler;
+import com.xiepuhuan.reptile.scheduler.impl.AbstractFilterScheduler;
 import java.util.List;
 
 /**
@@ -15,6 +16,8 @@ public interface Workflow extends Runnable {
 
     Scheduler getScheduler();
 
+    AbstractFilterScheduler getFilterScheduler();
+
     Downloader getDownloader();
 
     List<ResponseHandler> getResponseHandlers();
@@ -22,4 +25,6 @@ public interface Workflow extends Runnable {
     Consumer getConsumer();
 
     long getSleepTime();
+
+    int getRetryCount();
 }

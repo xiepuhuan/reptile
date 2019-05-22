@@ -1,6 +1,7 @@
 package com.xiepuhuan.reptile.workflow.impl;
 
 import com.xiepuhuan.reptile.config.ReptileConfig;
+import com.xiepuhuan.reptile.constants.RequestAttributesConstants;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.model.Response;
@@ -23,7 +24,7 @@ public class DistributedWorkflow extends AbstractWorkflow {
 
     public DistributedWorkflow(CountDownLatch latch, String name, ReptileConfig config) {
 
-        super(name, config.getScheduler(), config.getDownloader(), config.getResponseHandlers(), config.getConsumer(), config.getSleepTime());
+        super(name, config);
         this.latch = latch;
     }
 
@@ -39,7 +40,20 @@ public class DistributedWorkflow extends AbstractWorkflow {
                 try {
                     response = getDownloader().download(request);
                 } catch (IOException | IllegalStateException e) {
-                    LOGGER.warn("Failed to download response about request [{}]: {}", request.toString(), e.getMessage());
+                    LOGGER.warn("Failed to download response about request [{}]: {}", request, e.getMessage());
+                    if (getRetryCount() > 0 && getFilterScheduler() != null) {
+                        Object retryCount = request.getAttribute(RequestAttributesConstants.REQUEST_RETRY_COUNT);
+                        int rc = 1;
+                        if (retryCount instanceof Integer) {
+                            if ((rc = (Integer) retryCount + 1) > getRetryCount()) {
+                                LOGGER.info("The number of retries requested has reached the maximum of {}: {}", getRetryCount(), request);
+                                continue;
+                            }
+                        }
+                        request.setAttribute(RequestAttributesConstants.REQUEST_RETRY_COUNT, rc);
+                        LOGGER.info("Request [{}] reentry to scheduler", request.toString());
+                        getFilterScheduler().pushUnfiltered(request);
+                    }
                     continue;
                 }
 
