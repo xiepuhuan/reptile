@@ -8,6 +8,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.xiepuhuan.reptile.config.MongoDBConfig;
+import com.xiepuhuan.reptile.constants.ResultExtendedField;
 import com.xiepuhuan.reptile.exception.UnsupportedObjectException;
 import com.xiepuhuan.reptile.model.Result;
 import com.xiepuhuan.reptile.utils.ArgUtils;
@@ -75,7 +76,7 @@ public class MongoDBConsumer extends AbstractCloseableBufferConsumer {
 
         for (int i = 0; i < position; ++i) {
             String collectionName;
-            if ((collectionName = buffer[i].getExtendedField(Result.MONGODB_DATABASE_COLLECTION_NAME)) == null) {
+            if ((collectionName = buffer[i].getExtendedField(ResultExtendedField.MONGODB_DATABASE_COLLECTION_NAME)) == null) {
                 throw new UnsupportedObjectException("Object types must be MongoResult or its subclasses");
             }
 
