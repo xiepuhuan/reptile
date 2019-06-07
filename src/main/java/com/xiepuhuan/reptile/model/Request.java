@@ -1,6 +1,7 @@
 package com.xiepuhuan.reptile.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.ContentType;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicHeader;
 
 /**
@@ -22,8 +24,6 @@ public class Request {
     private String method;
 
     private String url;
-
-    private List<Cookie> cookies;
 
     private List<Header> headers;
 
@@ -50,22 +50,6 @@ public class Request {
 
     public String getUrl() {
         return url;
-    }
-
-    public Cookie[] getCookies() {
-        if (cookies == null) {
-            return null;
-        }
-
-        return cookies.stream().toArray(Cookie[]::new);
-    }
-
-    public Request append(Cookie cookie) {
-        if (cookies == null) {
-            cookies = new ArrayList<>();
-        }
-        cookies.add(cookie);
-        return this;
     }
 
     public List<Header> getHeaders() {

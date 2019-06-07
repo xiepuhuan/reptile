@@ -7,6 +7,7 @@ import com.xiepuhuan.reptile.downloader.CloseableDownloader;
 import com.xiepuhuan.reptile.downloader.constants.UserAgentConstants;
 import com.xiepuhuan.reptile.downloader.model.Proxy;
 import com.xiepuhuan.reptile.model.Content;
+import com.xiepuhuan.reptile.model.Cookie;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.model.Response;
 import com.xiepuhuan.reptile.utils.ArgUtils;
@@ -18,6 +19,9 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.ParseException;
 import org.apache.http.client.CookieStore;
@@ -33,12 +37,14 @@ import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.cookie.ClientCookie;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +78,7 @@ public class HttpClientDownloader implements CloseableDownloader {
         this.userAgentPool = config.isEnableUserAgentPoolConfig() ? new FixedPool<>(config.getUserAgentPoolConfig()) : null;
         this.proxyPool = config.isEnableProxyPoolConfig() ? new FixedPool<>(config.getProxyPoolConfig()) : null;
         this.config = config;
-        this.cookieStore = new BasicCookieStore();
+        this.cookieStore = buildCookieStore();
         this.clientConnectionManager = buildConnectionManager();
         this.httpClient = buildHttpClient();
     }
@@ -85,10 +91,6 @@ public class HttpClientDownloader implements CloseableDownloader {
     public Response download(Request request) throws ParseException, UnsupportedCharsetException, IOException {
         if (request == null) {
             return null;
-        }
-
-        if (request.getCookies() != null) {
-            Arrays.stream(request.getCookies()).forEach(cookieStore::addCookie);
         }
 
         RequestBuilder requestBuilder = RequestBuilder.create(request.getMethod())
@@ -157,6 +159,32 @@ public class HttpClientDownloader implements CloseableDownloader {
             }
             return buffer.toByteArray();
         }
+    }
+
+    private BasicClientCookie cookie2BasicClientCookie(Cookie cookie) {
+        BasicClientCookie clientCookie = new BasicClientCookie(cookie.getName(), cookie.getValue());
+        clientCookie.setDomain(cookie.getDomain());
+        clientCookie.setPath(cookie.getPath());
+        clientCookie.setExpiryDate(cookie.getExpiryDate());
+        clientCookie.setSecure(cookie.isSecure());
+
+        clientCookie.setAttribute(ClientCookie.DOMAIN_ATTR, cookie.getDomain());
+        clientCookie.setAttribute(ClientCookie.PATH_ATTR, cookie.getPath());
+        if (cookie.getExpiryDate() != null) {
+            clientCookie.setAttribute(ClientCookie.DOMAIN_ATTR, cookie.getExpiryDate().toString());
+        }
+        return clientCookie;
+    }
+
+    private CookieStore buildCookieStore() {
+        CookieStore cookieStore = new BasicCookieStore();
+        List<Cookie> cookies = config.getCookies();
+        if (CollectionUtils.isEmpty(cookies)) {
+            return cookieStore;
+        }
+
+        cookies.stream().map(this::cookie2BasicClientCookie).forEach(cookieStore::addCookie);
+        return cookieStore;
     }
 
     private CloseableHttpClient buildHttpClient() {

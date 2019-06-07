@@ -2,12 +2,14 @@ package com.xiepuhuan.reptile.config;
 
 import com.xiepuhuan.reptile.downloader.constants.UserAgentConstants;
 import com.xiepuhuan.reptile.downloader.model.Proxy;
+import com.xiepuhuan.reptile.model.Cookie;
 import com.xiepuhuan.reptile.utils.ArgUtils;
 import java.util.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.ParseException;
+import org.apache.http.impl.cookie.BasicClientCookie2;
 
 /**
  * @author xiepuhuan
@@ -17,7 +19,7 @@ public class DownloaderConfig {
     public static final DownloaderConfig DEFAULT_DOWNLOADER_CONFIG = Builder.create();
 
     /**
-     * 通用的user-agent，对所有HTTP请求的首部行设置该值
+     * 通用的user-agent, 对所有HTTP请求的首部行设置该值
      */
     private String generalUserAgent;
 
@@ -25,6 +27,9 @@ public class DownloaderConfig {
 
     private boolean enableUserAgentPoolConfig;
 
+    /**
+     * 通用的proxy, 对所有HTTP请求生效
+     */
     private Proxy generalProxy;
 
     private PoolConfig<Proxy> proxyPoolConfig;
@@ -53,6 +58,8 @@ public class DownloaderConfig {
 
     private List<Header> headers;
 
+    private List<Cookie> cookies;
+
     public void check() {
         ArgUtils.notEmpty(generalUserAgent, "generalUserAgent");
 
@@ -61,7 +68,7 @@ public class DownloaderConfig {
     private DownloaderConfig(String generalUserAgent, PoolConfig<String> userAgentPoolConfig, boolean enableUserAgentPoolConfig,
                             Proxy generalProxy, PoolConfig<Proxy> proxyPoolConfig, boolean enableProxyPoolConfig,
                             int defaultMaxPerRoute, int maxTotalConnections, int socketTimeout, int connectTimeout,
-                            int connectRequestTimeout, List<Header> headers) {
+                            int connectRequestTimeout, List<Header> headers, List<Cookie> cookies) {
         this.generalUserAgent = generalUserAgent;
         this.userAgentPoolConfig = userAgentPoolConfig;
         this.enableUserAgentPoolConfig = enableUserAgentPoolConfig;
@@ -74,6 +81,7 @@ public class DownloaderConfig {
         this.connectTimeout = connectTimeout;
         this.connectRequestTimeout = connectRequestTimeout;
         this.headers = headers;
+        this.cookies = cookies;
     }
 
     public String getGeneralUserAgent() {
@@ -124,6 +132,10 @@ public class DownloaderConfig {
         return headers;
     }
 
+    public List<Cookie> getCookies() {
+        return cookies;
+    }
+
     public static class Builder {
 
         private String generalUserAgent;
@@ -146,6 +158,8 @@ public class DownloaderConfig {
 
         private List<Header> headers;
 
+        private List<Cookie> cookies;
+
         Builder() {
             this.generalUserAgent = UserAgentConstants.CHROME_FOR_LINUX;
             this.userAgentPoolConfig = null;
@@ -157,6 +171,7 @@ public class DownloaderConfig {
             this.connectTimeout = 2000;
             this.connectRequestTimeout = 500;
             this.headers = new ArrayList<>();
+            this.cookies = new ArrayList<>();
         }
 
         public Builder setGeneralUserAgent(String generalUserAgent) {
@@ -229,6 +244,21 @@ public class DownloaderConfig {
             return this;
         }
 
+        public Builder appendCookie(Cookie cookie) {
+            this.cookies.add(cookie);
+            return this;
+        }
+
+        public Builder appendCookies(Cookie... cookies) {
+            this.cookies.addAll(Arrays.asList(cookies));
+            return this;
+        }
+
+        public Builder appendCookies(Collection<Cookie> cookies) {
+            this.cookies.addAll(cookies);
+            return this;
+        }
+
         public static Builder custom() {
             return new Builder();
         }
@@ -239,7 +269,7 @@ public class DownloaderConfig {
 
             return new DownloaderConfig(generalUserAgent, userAgentPoolConfig, enableUserAgentPoolConfig, generalProxy,
                     proxyPoolConfig, enableProxyPoolConfig, defaultMaxPerRoute, maxTotalConnections, socketTimeout,
-                    connectTimeout, connectRequestTimeout, headers);
+                    connectTimeout, connectRequestTimeout, headers, cookies);
         }
 
         public static DownloaderConfig create() {
