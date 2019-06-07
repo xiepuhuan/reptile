@@ -58,7 +58,7 @@ mvn -Dmaven.test.skip=true
 # 推荐
 
 + 推荐使用`MongoDBConsumer`作为爬虫消费者, 因为其面向文档存储, 文档可嵌套文档、数组, 并且预先不需要建表, 这些特性非常适合爬虫爬取的不确定网络数据, JSON格式数据的存储。
-+ 若是使用MongoDBConsumer作为数据消费者, 那么必须在`ResponseHandler`中的`handle`方法中调用`result`的`setExtendedField`方法并使用`ResultExtendedField.REQUEST_RETRY_COUNT`常量作为键设置数据存储的表名称。
++ 若是使用MongoDBConsumer作为数据消费者, 那么必须在`ResponseHandler`中的`handle`方法中调用`result`的`setExtendedField`方法并使用`ResultExtendedField.MONGODB_DATABASE_COLLECTION_NAME`常量作为键设置数据存储的表名称。
 
 # 示例
 
