@@ -7,8 +7,6 @@ import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.model.Response;
 import com.xiepuhuan.reptile.model.ResponseContext;
 import com.xiepuhuan.reptile.model.Result;
-import com.xiepuhuan.reptile.scheduler.Scheduler;
-import com.xiepuhuan.reptile.scheduler.impl.AbstractFilterScheduler;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -98,7 +96,7 @@ public class SingleWorkflow extends AbstractWorkflow {
                 try {
                     requests = requestResponseHandler.handle(responseContext, result);
                 } catch (Throwable throwable) {
-                    LOGGER.warn("Failed to handle response: [{}]", throwable.getMessage());
+                    LOGGER.warn("Failed to handle response, [{}], request: [{}], response: {}", throwable.getMessage(), request, response);
                     continue;
                 }
 

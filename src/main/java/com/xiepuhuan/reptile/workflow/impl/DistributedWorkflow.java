@@ -23,7 +23,6 @@ public class DistributedWorkflow extends AbstractWorkflow {
     private final CountDownLatch latch;
 
     public DistributedWorkflow(CountDownLatch latch, String name, ReptileConfig config) {
-
         super(name, config);
         this.latch = latch;
     }
@@ -70,7 +69,7 @@ public class DistributedWorkflow extends AbstractWorkflow {
                 try {
                     requests = requestResponseHandler.handle(responseContext, result);
                 } catch (Throwable throwable) {
-                    LOGGER.warn("Failed to handle response: [{}]", throwable.getMessage());
+                    LOGGER.warn("Failed to handle response, [{}], request: [{}], response: {}", throwable.getMessage(), request, response);
                     continue;
                 }
                 getScheduler().put(requests);

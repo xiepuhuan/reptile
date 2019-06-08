@@ -4,8 +4,6 @@ import com.xiepuhuan.reptile.config.ReptileConfig;
 import com.xiepuhuan.reptile.consumer.Consumer;
 import com.xiepuhuan.reptile.downloader.Downloader;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
-import com.xiepuhuan.reptile.model.Request;
-import com.xiepuhuan.reptile.model.Response;
 import com.xiepuhuan.reptile.model.ResponseContext;
 import com.xiepuhuan.reptile.scheduler.Scheduler;
 import com.xiepuhuan.reptile.scheduler.impl.AbstractFilterScheduler;

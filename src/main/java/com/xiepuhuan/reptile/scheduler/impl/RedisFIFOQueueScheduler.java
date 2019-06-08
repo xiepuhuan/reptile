@@ -17,23 +17,32 @@ public class RedisFIFOQueueScheduler extends AbstractFilterScheduler implements 
 
     public static final String DEFAULT_REQUEST_QUEUE_NAME = "reptile_request_queue";
 
-    private final RBlockingQueue<Request> queue;
+    private RBlockingQueue<Request> queue;
 
     private final RedisConfig redisConfig;
 
-    public RedisFIFOQueueScheduler(String queueName, RequestFilter requestFilter, RedisConfig redisConfig) {
+    public RedisFIFOQueueScheduler(String queueName, RequestFilter requestFilter, boolean recreate, RedisConfig redisConfig) {
         super(requestFilter);
         ArgUtils.notNull(queueName, "queueName");
-        this.queue = RedisClientManager.getRedissonClient(redisConfig).getBlockingQueue(queueName);
+        ArgUtils.notNull(redisConfig, "redisConfig");
+        redisConfig.check();
         this.redisConfig = redisConfig;
+        this.queue = RedisClientManager.getRedissonClient(redisConfig).getBlockingQueue(queueName);
+        if (recreate && queue.isExists()) {
+            queue.delete();
+        }
     }
 
     public RedisFIFOQueueScheduler(String queueName) {
-        this(queueName, new RedisBloomRequestFilter(), RedisConfig.DEFAULT_REDIS_CONFIG);
+        this(queueName, new RedisBloomRequestFilter(), false, RedisConfig.DEFAULT_REDIS_CONFIG);
+    }
+
+    public RedisFIFOQueueScheduler(String queueName, RequestFilter requestFilter, boolean recreate) {
+        this(queueName, requestFilter, recreate, RedisConfig.DEFAULT_REDIS_CONFIG);
     }
 
     public RedisFIFOQueueScheduler() {
-        this(DEFAULT_REQUEST_QUEUE_NAME, new RedisBloomRequestFilter(), RedisConfig.DEFAULT_REDIS_CONFIG);
+        this(DEFAULT_REQUEST_QUEUE_NAME, new RedisBloomRequestFilter(), false, RedisConfig.DEFAULT_REDIS_CONFIG);
     }
 
     @Override
@@ -47,8 +56,8 @@ public class RedisFIFOQueueScheduler extends AbstractFilterScheduler implements 
     }
 
     @Override
-    public void putUnfiltered(Request requests) throws InterruptedException {
-        queue.put(requests);
+    public void putUnfiltered(Request request) throws InterruptedException {
+        queue.put(request);
     }
 
     @Override
