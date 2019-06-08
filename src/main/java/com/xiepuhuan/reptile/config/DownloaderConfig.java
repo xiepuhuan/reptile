@@ -3,13 +3,10 @@ package com.xiepuhuan.reptile.config;
 import com.xiepuhuan.reptile.downloader.constants.UserAgentConstants;
 import com.xiepuhuan.reptile.downloader.model.Proxy;
 import com.xiepuhuan.reptile.model.Cookie;
+import com.xiepuhuan.reptile.model.Header;
 import com.xiepuhuan.reptile.utils.ArgUtils;
 import java.util.*;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.ParseException;
-import org.apache.http.impl.cookie.BasicClientCookie2;
 
 /**
  * @author xiepuhuan
@@ -224,23 +221,18 @@ public class DownloaderConfig {
             return this;
         }
 
+        public Builder appendHeaders(Header... headers) {
+            this.headers.addAll(Arrays.asList(headers));
+            return this;
+        }
+
+        public Builder appendHeaders(Header header) {
+            this.headers.add(header);
+            return this;
+        }
+
         public Builder appendHeader(String name, String value) {
-            this.headers.add(new Header() {
-                @Override
-                public HeaderElement[] getElements() throws ParseException {
-                    return new HeaderElement[0];
-                }
-
-                @Override
-                public String getName() {
-                    return name;
-                }
-
-                @Override
-                public String getValue() {
-                    return value;
-                }
-            });
+            this.headers.add(new Header(name, value));
             return this;
         }
 

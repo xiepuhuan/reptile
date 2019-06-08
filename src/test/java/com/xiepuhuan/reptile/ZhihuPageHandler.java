@@ -6,9 +6,11 @@ import com.xiepuhuan.reptile.config.DeploymentModeEnum;
 import com.xiepuhuan.reptile.config.ReptileConfig;
 import com.xiepuhuan.reptile.consumer.impl.ConsoleConsumer;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
-import com.xiepuhuan.reptile.model.*;
+import com.xiepuhuan.reptile.model.Content;
+import com.xiepuhuan.reptile.model.Request;
+import com.xiepuhuan.reptile.model.ResponseContext;
+import com.xiepuhuan.reptile.model.Result;
 import com.xiepuhuan.reptile.scheduler.impl.FIFOQueueScheduler;
-import com.xiepuhuan.reptile.scheduler.impl.RedisFIFOQueueScheduler;
 import java.util.ArrayList;
 import java.util.List;
 

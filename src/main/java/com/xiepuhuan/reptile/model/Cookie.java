@@ -1,10 +1,7 @@
 package com.xiepuhuan.reptile.model;
 
 import com.xiepuhuan.reptile.utils.ArgUtils;
-import java.text.DateFormat;
 import java.util.Date;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.DateUtils;
 
 /**
  * @author xiepuhuan
@@ -13,22 +10,34 @@ public class Cookie {
 
     public static final String DEFAULT_PATH = "/";
 
-    /** Cookie name */
+    /**
+     * Cookie name
+     */
     private final String name;
 
-    /** Cookie value */
+    /**
+     * Cookie value
+     */
     private String value;
 
-    /** Domain attribute. */
-    private String  domain;
+    /**
+     * Domain attribute.
+     */
+    private String domain;
 
-    /** Expiration {@link Date}. */
+    /**
+     * Expiration {@link Date}.
+     */
     private Date expiryDate;
 
-    /** Path attribute. */
+    /**
+     * Path attribute.
+     */
     private String path;
 
-    /** My secure flag. */
+    /**
+     * My secure flag.
+     */
     private boolean isSecure;
 
     public Cookie(String name, String value, String domain) {

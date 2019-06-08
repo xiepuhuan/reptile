@@ -1,19 +1,11 @@
 package com.xiepuhuan.reptile.downloader;
 
-import com.xiepuhuan.reptile.config.DownloaderConfig;
-import com.xiepuhuan.reptile.config.PoolConfig;
 import com.xiepuhuan.reptile.downloader.impl.HttpClientDownloader;
-import com.xiepuhuan.reptile.downloader.model.Proxy;
-import com.xiepuhuan.reptile.model.Cookie;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.model.Response;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.http.HttpStatus;
-import org.apache.http.cookie.ClientCookie;
 import org.apache.http.entity.ContentType;
-import org.apache.http.impl.cookie.BasicClientCookie;
 import org.junit.Assert;
 import org.junit.Test;
 

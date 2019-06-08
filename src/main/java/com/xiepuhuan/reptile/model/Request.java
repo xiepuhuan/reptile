@@ -6,11 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.Header;
-import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.ContentType;
-import org.apache.http.impl.cookie.BasicClientCookie;
-import org.apache.http.message.BasicHeader;
 
 /**
  * @author xiepuhuan
@@ -33,7 +29,8 @@ public class Request {
 
     private volatile Map<String, Object> attributes;
 
-    private Request() {}
+    private Request() {
+    }
 
     public Request(String method, String url) {
         this.method = method;
@@ -61,11 +58,21 @@ public class Request {
         return this;
     }
 
+    public Request setHeaders(Header... headers) {
+        this.headers.addAll(Arrays.asList(headers));
+        return this;
+    }
+
+    public Request setHeaders(Header header) {
+        this.headers.add(header);
+        return this;
+    }
+
     public Request setHeader(String name, String value) {
         if (headers == null) {
             headers = new ArrayList<>();
         }
-        headers.add(new BasicHeader(name, value));
+        headers.add(new Header(name, value));
         return this;
     }
 

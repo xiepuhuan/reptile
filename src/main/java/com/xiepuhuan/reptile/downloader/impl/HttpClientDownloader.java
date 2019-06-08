@@ -14,13 +14,13 @@ import com.xiepuhuan.reptile.utils.ArgUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.charset.UnsupportedCharsetException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.ParseException;
@@ -45,6 +45,7 @@ import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,15 +102,16 @@ public class HttpClientDownloader implements CloseableDownloader {
         }
 
         if (userAgentPool != null) {
-            request.setHeader(UserAgentConstants.USER_AGENT_NAME, userAgentPool.selectOne());
+            requestBuilder.setHeader(UserAgentConstants.USER_AGENT_NAME, userAgentPool.selectOne());
         }
 
         if (request.getHeaders() != null) {
-            request.getHeaders().forEach(requestBuilder::addHeader);
+            request.getHeaders().stream().map((header -> new BasicHeader(header.getName(), header.getValue()))).forEach(requestBuilder::addHeader);
         }
 
         if (request.getBody() != null) {
-            requestBuilder.setEntity(EntityBuilder.create()
+            requestBuilder
+                    .setEntity(EntityBuilder.create()
                     .setContentType(request.getContentType())
                     .setBinary(request.getBody())
                     .build()
@@ -161,6 +163,21 @@ public class HttpClientDownloader implements CloseableDownloader {
         }
     }
 
+    public void fillCookieStore(String cookieStr, Request request) {
+        ArgUtils.notEmpty(cookieStr, "cookieStr");
+
+        String[] cookieStrSub = cookieStr.split("; ");
+        String host = URI.create(request.getUrl()).getHost(),
+                domain = host.substring(host.indexOf("."));
+        for (String c : cookieStrSub) {
+            int i = c.indexOf("=");
+            if (i >= 0) {
+                Cookie cookie = new Cookie(c.substring(0, i), c.substring(i + 1), domain);
+                cookieStore.addCookie(cookie2BasicClientCookie(cookie));
+            }
+        }
+    }
+
     private BasicClientCookie cookie2BasicClientCookie(Cookie cookie) {
         BasicClientCookie clientCookie = new BasicClientCookie(cookie.getName(), cookie.getValue());
         clientCookie.setDomain(cookie.getDomain());
@@ -192,14 +209,14 @@ public class HttpClientDownloader implements CloseableDownloader {
                 .setSocketTimeout(config.getSocketTimeout())
                 .setConnectTimeout(config.getConnectTimeout())
                 .setConnectionRequestTimeout(config.getConnectRequestTimeout())
-                .setCookieSpec(CookieSpecs.STANDARD)
+                .setCookieSpec(CookieSpecs.DEFAULT)
                 .build();
 
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create()
                 .setUserAgent(config.getGeneralUserAgent())
                 .setMaxConnPerRoute(config.getDefaultMaxPerRoute())
                 .setMaxConnTotal(config.getMaxTotalConnections())
-                .setDefaultHeaders(config.getHeaders())
+                .setDefaultHeaders(config.getHeaders().stream().map(header -> new BasicHeader(header.getName(), header.getValue())).collect(Collectors.toList()))
                 .setDefaultCookieStore(cookieStore)
                 .setDefaultRequestConfig(requestConfig)
                 .setRetryHandler(new DefaultHttpRequestRetryHandler(3, true))
