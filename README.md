@@ -2,30 +2,36 @@
 
 > Reptile是一个具有高拓展性的可支持单机与集群部署Java多线程爬虫框架，该框架可简化爬虫的开发流程。该框架各个组件高内聚松耦合的特性让用户可以对不同组件进行定制来满足不同的需求。
 
-
-# 架构
-
-![Reptile.png](https://upload-images.jianshu.io/upload_images/4750376-3f10253975343c38.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
-`Reptile`作为爬虫主体可在主线程运行也可以异步运行，爬虫主要有四个核心组件：
-+ `Scheduler`执行请求调度，可以往其添加新的爬取请求，并支持去重处理
-+ `Downloader`执行请求下载与解析响应
-+ `ResponseHandler`由使用者提供实现来对响应处理，形成`Result`结果与新的爬取请求`Request`
-+ `Consumer`来对处理的结果`Result`进行消费，例如持久化存储，用户可自定义其具体实现
-
-四个组件之间的关系如架构图所示，它们之间的互相调用形成一个完整的工作流并在`Workflow`线程中运行，`Reptile`爬虫会根据配置的线程数量通过线程池创建指定数量的工作流线程并发执行工作流任务。
-
 # 特性
 
 + 模块化设计，具有高度拓展性
 + 支持单机多线程部署
 + 支持简单集群部署
 + 配置简单清晰
-+ 单机部署时，请求爬取完毕并且无其他线程产生新请求时会自动停止爬虫并关闭资源
++ 支持同步或异步运行
++ 单机部署时，请求爬取完毕并且无其他线程产生新请求时会自动停止爬虫并关闭所有可关闭的资源
 + 整合Jsoup，支持HTML页面解析
-+ 请求调度器支持URL或请求的去重处理，提供布隆过滤器与集合去重实现，默认使用布隆过滤器，可在配置类进行指定
++ 请求调度器支持URL或请求的去重处理，提供布隆过滤器与集合等去重实现，默认使用布隆过滤器，可在配置类进行指定
 + 支持设置UserAgent池与Proxy池，并且可设置请求对UserAgent与Proxy的选择策略，如随机或循环顺序选择
 + 当爬取请求出现IO异常时，支持请求重试，可在配置类指定请求重试次数
+
+# 架构
+
+![Reptile.png](https://upload-images.jianshu.io/upload_images/4750376-3f10253975343c38.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+`Reptile`作为爬虫主体可在主线程运行也可以异步运行，爬虫主要有四个核心组件：
++ `Scheduler` 执行请求调度，支持添加与拉取新的爬取请求，并支持去重处理
+    + `FIFOQueueScheduler` 基于Java的`ConcurrentLinkedQueue`实现的先进先出无限队列调度器、线程安全、不支持持久化，适合作为小型爬虫的请求调度器
+    + `RedisFIFOQueueScheduler` 基于Redis的列表实现的先进先出无限队列调度器、线程安全、阻塞添加与拉取请求、支持持久化，适合作为大型爬虫的请求调度器
++ `Downloader` 执行请求下载与解析响应
+    + `HttpClientDownloader`基于apache的`httpclient`实现的下载器
++ `ResponseHandler` 由使用者提供实现来对响应处理，生成`Result`结果与新的爬取请求`Request`
++ `Consumer` 来对处理的结果`Result`进行消费，例如持久化存储，用户可自定义其具体实现
+    + `ConsoleConsumer` 控制台数据消费者，默认使用`System.out.println`将数据输出到控制台
+    + `JsonFileConsumer` Json文件消费者，将`Result`数据序列化为JSON字符串并按行输出到指定文件，这样读取数据时可直接按行反序列化JSON字符串
+    + `MongoDBConsumer` MongoDB数据消费者，将`Result`数据存储到指定的MongoDB数据库中的表
+
+四个组件之间的关系如架构图所示，它们之间的互相调用形成一个完整的工作流并在`Workflow`线程中运行，`Reptile`爬虫会根据配置的线程数量通过线程池创建指定数量的工作流线程并发执行工作流任务。
 
 # 快速开始
 
@@ -92,7 +98,7 @@ public class ZhihuPageHandler implements ResponseHandler {
         return true;
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) {
 
         // 构建Reptile爬虫配置类，
         ReptileConfig config = ReptileConfig.Builder.cutom()
@@ -141,7 +147,7 @@ public class ZhihuPageHandler implements ResponseHandler {
         return true;
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) {
 
         // 构建Reptile爬虫配置类，
 
