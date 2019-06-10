@@ -3,6 +3,7 @@ package com.xiepuhuan.reptile.scheduler;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.scheduler.filter.impl.BloomRequestFilter;
 import com.xiepuhuan.reptile.scheduler.filter.impl.HashSetRequestFilter;
+import com.xiepuhuan.reptile.scheduler.filter.impl.RedisBloomRequestFilter;
 import com.xiepuhuan.reptile.scheduler.impl.FIFOQueueScheduler;
 import com.xiepuhuan.reptile.scheduler.impl.RedisFIFOQueueScheduler;
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ public class FIFOQueueSchedulerTest {
     public void test() {
         test(new FIFOQueueScheduler(new BloomRequestFilter()));
         test(new FIFOQueueScheduler(new HashSetRequestFilter()));
-        test(new RedisFIFOQueueScheduler());
+        test(RedisFIFOQueueScheduler.Builder.custom().setRequestFilter(RedisBloomRequestFilter.Builder.create()).build());
     }
 
 

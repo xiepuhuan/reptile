@@ -2,8 +2,8 @@ package com.xiepuhuan.reptile;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.xiepuhuan.reptile.config.DeploymentModeEnum;
 import com.xiepuhuan.reptile.config.ReptileConfig;
+import com.xiepuhuan.reptile.constants.DeploymentModeEnum;
 import com.xiepuhuan.reptile.consumer.impl.ConsoleConsumer;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
 import com.xiepuhuan.reptile.model.Content;

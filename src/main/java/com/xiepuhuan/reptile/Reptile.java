@@ -1,7 +1,7 @@
 package com.xiepuhuan.reptile;
 
-import com.xiepuhuan.reptile.config.DeploymentModeEnum;
 import com.xiepuhuan.reptile.config.ReptileConfig;
+import com.xiepuhuan.reptile.constants.DeploymentModeEnum;
 import com.xiepuhuan.reptile.consumer.CloseableConsumer;
 import com.xiepuhuan.reptile.consumer.Consumer;
 import com.xiepuhuan.reptile.downloader.CloseableDownloader;

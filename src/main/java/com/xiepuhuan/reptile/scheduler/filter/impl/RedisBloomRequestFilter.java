@@ -7,6 +7,7 @@ import com.xiepuhuan.reptile.scheduler.filter.CloseableRequestFilter;
 import com.xiepuhuan.reptile.scheduler.filter.constants.BloomFilterConstants;
 import com.xiepuhuan.reptile.utils.ArgUtils;
 import org.redisson.api.RBloomFilter;
+import org.redisson.api.RedissonClient;
 
 /**
  * @author xiepuhuan
@@ -15,7 +16,7 @@ public class RedisBloomRequestFilter implements CloseableRequestFilter {
 
     public static final String DEFAULT_BLOOM_FILTER_NAME = "reptile_request_bloom_filter";
 
-    private RBloomFilter<Request> bloomFilter;
+    private final RedissonClient redissonClient;
 
     private final RedisConfig redisConfig;
 
@@ -25,18 +26,21 @@ public class RedisBloomRequestFilter implements CloseableRequestFilter {
 
     private final double fpp;
 
-    public RedisBloomRequestFilter(RedisConfig redisConfig, String name, int expectedInsertions, double fpp, boolean recreate) {
+    private final RBloomFilter<Request> bloomFilter;
+
+    private RedisBloomRequestFilter(RedisConfig redisConfig, String name, int expectedInsertions, double fpp, boolean recreate) {
         ArgUtils.notNull(recreate, "redisConfig");
         redisConfig.check();
         ArgUtils.notEmpty(name, "bloomFilter name");
         ArgUtils.check(expectedInsertions > 0, "expectedInsertions must be more than 0");
         ArgUtils.check(fpp > 0.0 && fpp < 1.0, "fpp must be positive and less than 1.0");
 
+        this.redissonClient = RedisClientManager.createRedissonClient(redisConfig);
         this.redisConfig = redisConfig;
         this.name = name;
         this.expectedInsertions = expectedInsertions;
         this.fpp = fpp;
-        bloomFilter = RedisClientManager.getRedissonClient(redisConfig).getBloomFilter(name);
+        this.bloomFilter = redissonClient.getBloomFilter(name);
 
         if (recreate && bloomFilter.isExists()) {
             bloomFilter.delete();
@@ -47,16 +51,62 @@ public class RedisBloomRequestFilter implements CloseableRequestFilter {
         }
     }
 
-    public RedisBloomRequestFilter(String name, boolean recreate) {
-        this(RedisConfig.DEFAULT_REDIS_CONFIG, name, BloomFilterConstants.DEFAULT_EXPECTED_INSERTIONS, BloomFilterConstants.DEFAULT_FPP, recreate);
-    }
+    public static class Builder {
 
-    public RedisBloomRequestFilter(RedisConfig redisConfig) {
-        this(redisConfig, DEFAULT_BLOOM_FILTER_NAME, BloomFilterConstants.DEFAULT_EXPECTED_INSERTIONS, BloomFilterConstants.DEFAULT_FPP, false);
-    }
+        private RedisConfig redisConfig;
 
-    public RedisBloomRequestFilter() {
-        this(RedisConfig.DEFAULT_REDIS_CONFIG, DEFAULT_BLOOM_FILTER_NAME, BloomFilterConstants.DEFAULT_EXPECTED_INSERTIONS, BloomFilterConstants.DEFAULT_FPP, false);
+        private String name;
+
+        private int expectedInsertions;
+
+        private double fpp;
+
+        private boolean recreate;
+
+        public Builder() {
+            this.redisConfig = RedisConfig.DEFAULT_REDIS_CONFIG;
+            this.name = DEFAULT_BLOOM_FILTER_NAME;
+            this.expectedInsertions = BloomFilterConstants.DEFAULT_EXPECTED_INSERTIONS;
+            this.fpp = BloomFilterConstants.DEFAULT_FPP;
+            this.recreate = false;
+        }
+
+        public Builder setRedisConfig(RedisConfig redisConfig) {
+            this.redisConfig = redisConfig;
+            return this;
+        }
+
+        public Builder setName(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder setExpectedInsertions(int expectedInsertions) {
+            this.expectedInsertions = expectedInsertions;
+            return this;
+        }
+
+        public Builder setFpp(double fpp) {
+            this.fpp = fpp;
+            return this;
+        }
+
+        public Builder setRecreate(boolean recreate) {
+            this.recreate = recreate;
+            return this;
+        }
+
+        public static Builder custom() {
+            return new Builder();
+        }
+
+        public RedisBloomRequestFilter build() {
+            return new RedisBloomRequestFilter(redisConfig, name, expectedInsertions, fpp, recreate);
+        }
+
+        public static RedisBloomRequestFilter create() {
+            return custom().build();
+        }
     }
 
     @Override
@@ -65,8 +115,8 @@ public class RedisBloomRequestFilter implements CloseableRequestFilter {
     }
 
     @Override
-    public void close() {
-        RedisClientManager.shutdownRedisClient(redisConfig);
+    public synchronized void close() {
+        redissonClient.shutdown();
     }
 
     public RedisConfig getRedisConfig() {

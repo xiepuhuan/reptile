@@ -1,5 +1,6 @@
 package com.xiepuhuan.reptile.config;
 
+import com.xiepuhuan.reptile.constants.DeploymentModeEnum;
 import com.xiepuhuan.reptile.consumer.Consumer;
 import com.xiepuhuan.reptile.consumer.impl.ConsoleConsumer;
 import com.xiepuhuan.reptile.downloader.Downloader;
@@ -132,7 +133,7 @@ public class ReptileConfig {
             this.sleepTime = 0;
             this.asynRun = false;
             this.threadCount = Runtime.getRuntime().availableProcessors();
-            this.retryCount = 0;
+            this.retryCount = 3;
             this.deploymentMode = DeploymentModeEnum.SINGLE;
             this.scheduler = new FIFOQueueScheduler();
             this.downloader = new HttpClientDownloader();

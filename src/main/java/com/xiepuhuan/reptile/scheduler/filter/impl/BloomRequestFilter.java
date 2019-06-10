@@ -13,7 +13,7 @@ public class BloomRequestFilter implements RequestFilter {
 
     private static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
 
-    private BloomFilter<Request> bloomFilter;
+    private final BloomFilter<Request> bloomFilter;
 
     public BloomRequestFilter(int expectedInsertions, double fpp) {
 

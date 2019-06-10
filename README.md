@@ -107,7 +107,7 @@ public class ZhihuPageHandler implements ResponseHandler {
                 .setDeploymentMode(DeploymentModeEnum.SINGLE)
                 .setConsumer(new ConsoleConsumer())
                 .build();
-        // 构建Reptile爬虫对象并添加初始爬取URL
+        // 根据reptile配置构建Reptile爬虫并添加爬去的URL
         Reptile reptile = Reptile.create(config).addUrls(URLS);
         // 启动爬虫
         reptile.start();
@@ -148,20 +148,27 @@ public class ZhihuPageHandler implements ResponseHandler {
     }
 
     public static void main(String[] args) {
-
-        // 构建Reptile爬虫配置类，
-
-        ReptileConfig config = ReptileConfig.Builder.cutom()
-                .setThreadCount(8)
-                .appendResponseHandlers(new ZhihuPageHandler())
-                .setDeploymentMode(DeploymentModeEnum.Distributed)
-                .setScheduler(new RedisFIFOQueueScheduler())
-                .setConsumer(new ConsoleConsumer())
-                .build();
-        // 构建Reptile爬虫对象并添加爬去的URL
-        Reptile reptile = Reptile.create(config).addUrls(URLS);
-        // 启动爬虫
-        reptile.start();
-    }
+            
+            // 构建Redis队列调度器
+            Scheduler scheduler = RedisFIFOQueueScheduler.Builder.custom()
+                    .setRedisConfig(RedisConfig.DEFAULT_REDIS_CONFIG)
+                    .setRequestFilter(RedisBloomRequestFilter.Builder.create())
+                    .build();
+            // 构建数据消费者
+            Consumer consumer = new MongoDBConsumer(MongoDBConfig.DEFAULT_MONGODB_CONFIG);
+    
+            // 构建Reptile爬虫配置类
+            ReptileConfig config = ReptileConfig.Builder.cutom()
+                    .setThreadCount(8)
+                    .appendResponseHandlers(new ZhihuPageHandler())
+                    .setDeploymentMode(DeploymentModeEnum.Distributed)
+                    .setScheduler(scheduler)
+                    .setConsumer(consumer)
+                    .build();
+            // 根据reptile配置构建Reptile爬虫并添加爬去的URL
+            Reptile reptile = Reptile.create(config).addUrls(URLS);
+            // 启动爬虫
+            reptile.start();
+        }
 }
 ```

@@ -1,4 +1,4 @@
-package com.xiepuhuan.reptile.config;
+package com.xiepuhuan.reptile.constants;
 
 /**
  * @author xiepuhuan

@@ -3,7 +3,7 @@ package com.xiepuhuan.reptile.scheduler.impl;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.scheduler.Scheduler;
 import com.xiepuhuan.reptile.scheduler.filter.RequestFilter;
-import com.xiepuhuan.reptile.scheduler.filter.impl.BloomRequestFilter;
+import com.xiepuhuan.reptile.utils.ArgUtils;
 import java.util.Arrays;
 import java.util.Collection;
 import org.apache.commons.collections4.CollectionUtils;
@@ -17,11 +17,7 @@ public abstract class AbstractFilterScheduler implements Scheduler {
     private RequestFilter requestFilter;
 
     public AbstractFilterScheduler(RequestFilter requestFilter) {
-
-        if (requestFilter == null) {
-            requestFilter = new BloomRequestFilter();
-        }
-
+        ArgUtils.notNull(requestFilter, "requestFilter");
         this.requestFilter = requestFilter;
     }
 
