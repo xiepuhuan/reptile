@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 分布式工作流
  * @author xiepuhuan
  */
 public class DistributedWorkflow extends AbstractWorkflow {

@@ -1,6 +1,7 @@
 package com.xiepuhuan.reptile.constants;
 
 /**
+ * 部署模式
  * @author xiepuhuan
  */
 public enum DeploymentModeEnum {

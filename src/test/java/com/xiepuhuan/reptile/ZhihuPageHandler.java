@@ -2,6 +2,7 @@ package com.xiepuhuan.reptile;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import com.xiepuhuan.reptile.config.ReptileConfig;
 import com.xiepuhuan.reptile.constants.DeploymentModeEnum;
 import com.xiepuhuan.reptile.consumer.impl.ConsoleConsumer;
@@ -62,13 +63,13 @@ public class ZhihuPageHandler implements ResponseHandler {
     public static void main(String[] args) {
         long start = System.currentTimeMillis();
 
-        ReptileConfig config = ReptileConfig.Builder.cutom()
-                .setAsynRun(false)
-                .setThreadCount(8)
-                .appendResponseHandlers(new ZhihuPageHandler())
-                .setDeploymentMode(DeploymentModeEnum.SINGLE)
-                .setScheduler(new FIFOQueueScheduler())
-                .setConsumer(new ConsoleConsumer())
+        ReptileConfig config = ReptileConfig.builder()
+                .asynRun(false)
+                .threadCount(8)
+                .responseHandlers(Lists.newArrayList(new ZhihuPageHandler()))
+                .deploymentMode(DeploymentModeEnum.SINGLE)
+                .scheduler(new FIFOQueueScheduler())
+                .consumer(new ConsoleConsumer())
                 .build();
         Reptile reptile = Reptile.create(config).addUrls(URLS);
         reptile.start();

@@ -7,8 +7,6 @@ import com.xiepuhuan.reptile.utils.ArgUtils;
 import com.xiepuhuan.reptile.utils.CollectionUtils;
 import java.util.Collection;
 
-;
-
 /**
  * @author xiepuhuan
  */

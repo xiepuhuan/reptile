@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * 单机工作流
  * @author xiepuhuan
  */
 public class SingleWorkflow extends AbstractWorkflow {
