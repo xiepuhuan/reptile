@@ -17,7 +17,7 @@
 
 # 架构
 
-![Reptile.png](https://upload-images.jianshu.io/upload_images/4750376-3f10253975343c38.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![Reptile.png](https://raw.githubusercontent.com/xiepuhuan/reptile/master/src/main/resources/%E6%9E%B6%E6%9E%84%E5%9B%BE.png)
 
 `Reptile`作为爬虫主体可在主线程运行也可以异步运行，爬虫主要有四个核心组件：
 + `Scheduler` 执行请求调度，支持添加与拉取新的爬取请求，并支持去重处理
