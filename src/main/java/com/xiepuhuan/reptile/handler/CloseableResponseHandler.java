@@ -5,5 +5,5 @@ import java.io.Closeable;
 /**
  * @author xiepuhuan
  */
-public interface CloseableResponseHandler extends Closeable {
+public interface CloseableResponseHandler extends Closeable, ResponseHandler {
 }

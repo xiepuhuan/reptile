@@ -24,3 +24,7 @@
 /dist/
 /nbdist/
 /.nb-gradle/
+
+### test
+src/test/java/com/xiepuhuan/reptile/ZhihuUserListHandler.java
+src/test/java/com/xiepuhuan/reptile/ZhihuUserPageHandler.java
