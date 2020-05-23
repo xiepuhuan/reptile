@@ -100,11 +100,13 @@ public class ZhihuPageHandler implements ResponseHandler {
     public static void main(String[] args) {
 
         // 构建Reptile爬虫配置类，
-        ReptileConfig config = ReptileConfig.Builder.cutom()
-                .setThreadCount(8)
-                .appendResponseHandlers(new ZhihuPageHandler())
-                .setDeploymentMode(DeploymentModeEnum.SINGLE)
-                .setConsumer(new ConsoleConsumer())
+        ReptileConfig config = ReptileConfig.builder()
+                .asynRun(false)
+                .threadCount(8)
+                .responseHandlerChain(ResponseHandlerChain.create().addResponseHandler(new ZhihuPageHandler()))
+                .deploymentMode(DeploymentModeEnum.SINGLE)
+                .scheduler(new FIFOQueueScheduler())
+                .consumer(new ConsoleConsumer())
                 .build();
         // 根据reptile配置构建Reptile爬虫并添加爬去的URL
         Reptile reptile = Reptile.create(config).addUrls(URLS);
@@ -157,13 +159,14 @@ public class ZhihuPageHandler implements ResponseHandler {
             Consumer consumer = new MongoDBConsumer(MongoDBConfig.DEFAULT_MONGODB_CONFIG);
     
             // 构建Reptile爬虫配置类
-            ReptileConfig config = ReptileConfig.Builder.cutom()
-                    .setThreadCount(8)
-                    .appendResponseHandlers(new ZhihuPageHandler())
-                    .setDeploymentMode(DeploymentModeEnum.Distributed)
-                    .setScheduler(scheduler)
-                    .setConsumer(consumer)
+            ReptileConfig config = ReptileConfig.builder()
+                    .threadCount(8)
+                    .responseHandlerChain(ResponseHandlerChain.create().addResponseHandler(new ZhihuPageHandler()))
+                    .deploymentMode(DeploymentModeEnum.Distributed)
+                    .scheduler(scheduler)
+                    .consumer(consumer)
                     .build();
+
             // 根据reptile配置构建Reptile爬虫并添加爬去的URL
             Reptile reptile = Reptile.create(config).addUrls(URLS);
             // 启动爬虫
