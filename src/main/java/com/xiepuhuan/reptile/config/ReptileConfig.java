@@ -7,6 +7,7 @@ import com.xiepuhuan.reptile.consumer.impl.ConsoleConsumer;
 import com.xiepuhuan.reptile.downloader.Downloader;
 import com.xiepuhuan.reptile.downloader.impl.HttpClientDownloader;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
+import com.xiepuhuan.reptile.handler.impl.ResponseHandlerChain;
 import com.xiepuhuan.reptile.scheduler.Scheduler;
 import com.xiepuhuan.reptile.scheduler.impl.FIFOQueueScheduler;
 import com.xiepuhuan.reptile.utils.ArgUtils;
@@ -43,7 +44,7 @@ public class ReptileConfig {
 
     private Downloader downloader = new HttpClientDownloader();
 
-    private List<ResponseHandler> responseHandlers = Lists.newArrayList();
+    private ResponseHandlerChain responseHandlerChain = new ResponseHandlerChain();
 
     private Consumer consumer = new ConsoleConsumer();
 
@@ -55,7 +56,7 @@ public class ReptileConfig {
         ArgUtils.notNull(deploymentMode, "deploymentMode");
         ArgUtils.notNull(scheduler, "scheduler");
         ArgUtils.notNull(downloader, "downloader");
-        ArgUtils.notEmpty(responseHandlers, "responseHandlers");
+        ArgUtils.notNull(responseHandlerChain, "responseHandlerChain");
         ArgUtils.notNull(consumer, "consumer");
     }
 }

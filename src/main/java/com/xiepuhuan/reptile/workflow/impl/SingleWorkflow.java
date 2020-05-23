@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.xiepuhuan.reptile.workflow.context.WorkflowContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,15 +28,15 @@ public class SingleWorkflow extends AbstractWorkflow {
 
     private final Object requestArrived;
 
-    private final CountDownLatch latch;
+    private final CountDownLatch activeThreadLatch;
 
-    public SingleWorkflow(CountDownLatch latch, AtomicInteger activeThreadCount, Object requestArrived,
+    public SingleWorkflow(CountDownLatch activeThreadLatch, AtomicInteger activeThreadCount, Object requestArrived,
                           String name, ReptileConfig config) {
 
         super(name, config);
         this.activeThreadCount = activeThreadCount;
         this.requestArrived = requestArrived;
-        this.latch = latch;
+        this.activeThreadLatch = activeThreadLatch;
     }
 
     @Override
@@ -53,7 +55,7 @@ public class SingleWorkflow extends AbstractWorkflow {
                             requestArrived.notify();
                         }
                         LOGGER.info("All requests have been handled and workflow [{}] exits", getName());
-                        latch.countDown();
+                        activeThreadLatch.countDown();
                         return;
                     }
                     synchronized (requestArrived) {
@@ -84,17 +86,11 @@ public class SingleWorkflow extends AbstractWorkflow {
                     continue;
                 }
                 ResponseContext responseContext = new ResponseContext(request, response);
-                ResponseHandler requestResponseHandler = selectHandler(responseContext);
-
-                if (requestResponseHandler == null) {
-                    LOGGER.warn("No response was found for the response handler to handle the request [{}]", request);
-                    continue;
-                }
-
                 Result result = new Result();
+
                 List<Request> requests = null;
                 try {
-                    requests = requestResponseHandler.handle(responseContext, result);
+                    requests = getResponseHandlerChain().handle(responseContext, result);
                 } catch (Throwable throwable) {
                     LOGGER.warn("Failed to handle response, [{}], request: [{}], response: {}", throwable.getMessage(), request, response);
                     continue;
@@ -123,7 +119,7 @@ public class SingleWorkflow extends AbstractWorkflow {
                 break;
             }
         }
-        latch.countDown();
+        activeThreadLatch.countDown();
         LOGGER.info("Thread [{}] are interrupted to exit workflow [{}]", Thread.currentThread().getName(), getName());
     }
 }

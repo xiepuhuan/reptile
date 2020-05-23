@@ -22,6 +22,11 @@ public interface Scheduler {
 
     void put(Collection<Request> requests) throws InterruptedException;
 
+    /**
+     * 阻塞获取调度器的请求
+     * @return
+     * @throws InterruptedException
+     */
     Request take() throws InterruptedException;
 
     int size();

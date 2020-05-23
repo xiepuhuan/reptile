@@ -2,7 +2,6 @@ package com.xiepuhuan.reptile.workflow.impl;
 
 import com.xiepuhuan.reptile.config.ReptileConfig;
 import com.xiepuhuan.reptile.constants.RequestAttributesConstants;
-import com.xiepuhuan.reptile.handler.ResponseHandler;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.model.Response;
 import com.xiepuhuan.reptile.model.ResponseContext;
@@ -21,11 +20,11 @@ public class DistributedWorkflow extends AbstractWorkflow {
 
     private final Logger LOGGER = LoggerFactory.getLogger(DistributedWorkflow.class);
 
-    private final CountDownLatch latch;
+    private final CountDownLatch activeThreadLatch;
 
-    public DistributedWorkflow(CountDownLatch latch, String name, ReptileConfig config) {
+    public DistributedWorkflow(CountDownLatch activeThreadLatch, String name, ReptileConfig config) {
         super(name, config);
-        this.latch = latch;
+        this.activeThreadLatch = activeThreadLatch;
     }
 
     @Override
@@ -34,7 +33,6 @@ public class DistributedWorkflow extends AbstractWorkflow {
         for (; !Thread.interrupted(); ) {
             try {
                 Request request = getScheduler().take();
-
                 Response response = null;
 
                 try {
@@ -58,31 +56,24 @@ public class DistributedWorkflow extends AbstractWorkflow {
                 }
 
                 ResponseContext responseContext = new ResponseContext(request, response);
-                ResponseHandler requestResponseHandler = selectHandler(responseContext);
-
-                if (requestResponseHandler == null) {
-                    LOGGER.warn("No response was found for the response handler to handle the request [{}], the nonResponseResponseHandler will be used", request.toString());
-                    continue;
-                }
-
                 Result result = new Result();
+
                 List<Request> requests = null;
                 try {
-                    requests = requestResponseHandler.handle(responseContext, result);
+                    requests = getResponseHandlerChain().handle(responseContext, result);
                 } catch (Throwable throwable) {
                     LOGGER.warn("Failed to handle response, [{}], request: [{}], response: {}", throwable.getMessage(), request, response);
                     continue;
                 }
+
                 getScheduler().put(requests);
 
                 try {
-                    getConsumer().consume(result);
+                    if (!result.isIgnore()) {
+                        getConsumer().consume(result);
+                    }
                 } catch (Throwable throwable) {
                     LOGGER.warn("Failed to comsume result: [{}]", throwable.getMessage());
-                }
-
-                if (getSleepTime() > 0) {
-                    Thread.sleep(getSleepTime());
                 }
 
                 if (getSleepTime() > 0) {
@@ -92,7 +83,7 @@ public class DistributedWorkflow extends AbstractWorkflow {
                 break;
             }
         }
-        latch.countDown();
+        activeThreadLatch.countDown();
         LOGGER.info("Thread [{}] are interrupted to exit workflow [{}]", Thread.currentThread().getName(), getName());
     }
 }

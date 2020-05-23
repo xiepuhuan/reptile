@@ -8,6 +8,7 @@ import com.xiepuhuan.reptile.downloader.CloseableDownloader;
 import com.xiepuhuan.reptile.downloader.Downloader;
 import com.xiepuhuan.reptile.handler.CloseableResponseHandler;
 import com.xiepuhuan.reptile.handler.ResponseHandler;
+import com.xiepuhuan.reptile.handler.impl.ResponseHandlerChain;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.scheduler.CloseableScheduler;
 import com.xiepuhuan.reptile.scheduler.Scheduler;
@@ -18,10 +19,7 @@ import com.xiepuhuan.reptile.workflow.impl.DistributedWorkflowFactory;
 import com.xiepuhuan.reptile.workflow.impl.SingleWorkflowFactory;
 import com.xiepuhuan.reptile.workflow.impl.WorkflowThreadFactory;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -31,31 +29,41 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author xiepuhuan
+ * 爬虫主体
  */
 
 public class Reptile implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Reptile.class);
 
+    // 爬虫正在启动中
     private static final int STARTING = 2;
 
+    // 爬虫处于运行状态
     private static final int RUNNING = 1;
 
+    // 爬虫处于停止状态
     private static final int STOPPED = 0;
 
-    private static final int STOP = -1;
+    // 爬虫正在停止
+    private static final int STOPPING = -1;
 
+    // 爬虫配置类
     private ReptileConfig reptileConfig;
 
+    // 爬虫主线程，管理工作流线程的生命周期
     private Thread thread;
 
+    // 爬虫活跃的工作流线程
     private AtomicInteger activeThreadCount;
 
-    private CountDownLatch finalization;
+    // 爬虫状态
+    private AtomicInteger state;
 
+    // 爬虫工作流线程池
     private ExecutorService executorService;
 
-    private AtomicInteger state;
+    private CountDownLatch finalization;
 
     private Reptile(ReptileConfig reptileConfig) {
         ArgUtils.notNull(reptileConfig, "reptileConfig");
@@ -72,17 +80,10 @@ public class Reptile implements Runnable {
         return new Reptile(reptileConfig);
     }
 
-    private ExecutorService buildExecutor() {
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(getThreadCount(),
-                getThreadCount(), 1L, TimeUnit.NANOSECONDS,
-                new SynchronousQueue<>(), new WorkflowThreadFactory(getName()));
-        executor.allowCoreThreadTimeOut(true);
-        return executor;
-    }
-
     public void start() {
         if (!state.compareAndSet(STOPPED, STARTING)) {
             LOGGER.error("Reptile [{}] has started", getName());
+            return;
         }
 
         LOGGER.info("Reptile [{}] Startup", getName());
@@ -96,16 +97,15 @@ public class Reptile implements Runnable {
         }
     }
 
-
     public void stop() {
-        if (!state.compareAndSet(RUNNING, STOP) && !state.compareAndSet(STARTING, STOP)) {
+        if (!state.compareAndSet(RUNNING, STOPPING) && !state.compareAndSet(STARTING, STOPPING)) {
             LOGGER.error("Reptile [{}] has stopped", getName());
             return;
         }
 
         LOGGER.info("Reptile [{}] is stopping", getName());
         executorService.shutdownNow();
-        state.set(STOPPED);
+        state.compareAndSet(STOPPING, STOPPED);
         LOGGER.info("Reptile [{}] has stopped", getName());
     }
 
@@ -121,6 +121,7 @@ public class Reptile implements Runnable {
         for (int i = 0; i < getThreadCount(); ++i) {
             executorService.execute(workflowFactory.newWorkflow());
         }
+        state.compareAndSet(STARTING, RUNNING);
         try {
             finalization.await();
             close();
@@ -129,12 +130,63 @@ public class Reptile implements Runnable {
         }
     }
 
-    //　关闭资源
+    public Reptile addUrls(String... urls) {
+        getScheduler().push(Arrays.stream(urls).map(Request::new).toArray(Request[]::new));
+        return this;
+    }
+
+    public Reptile addUrls(Collection<String> urls) {
+        getScheduler().push(urls.stream().map(Request::new).collect(Collectors.toList()));
+        return this;
+    }
+
+    public Reptile addRequests(Request... requests) {
+        getScheduler().push(requests);
+        return this;
+    }
+
+    public Reptile addRequests(Collection<Request> requests) {
+        getScheduler().push(requests);
+        return this;
+    }
+
+    public int getActiveThreadCount() {
+        return activeThreadCount.get();
+    }
+
+    public String getName() {
+        return reptileConfig.getName();
+    }
+
+    public int getThreadCount() {
+        return reptileConfig.getThreadCount();
+    }
+
+    public Scheduler getScheduler() {
+        return reptileConfig.getScheduler();
+    }
+
+    public Downloader getDownloader() {
+        return reptileConfig.getDownloader();
+    }
+
+    public Consumer getConsumer() {
+        return reptileConfig.getConsumer();
+    }
+
+    public ResponseHandlerChain getResponseHandlerChain() {
+        return reptileConfig.getResponseHandlerChain();
+    }
+
+    public boolean isAsynRun() {
+        return reptileConfig.isAsynRun();
+    }
+
+    //　关闭爬虫的四大组件资源
     private void close() {
         CloseableScheduler closeableScheduler = getCloseableScheduler();
         CloseableDownloader closeableDownloader = getCloseableDownloader();
         CloseableConsumer closeableConsumer = getCloseableConsumer();
-        List<CloseableResponseHandler> closeableResponseHandlers = getCloseableResponseHandler();
 
         try {
             if (Objects.nonNull(closeableScheduler)) {
@@ -160,41 +212,20 @@ public class Reptile implements Runnable {
             LOGGER.warn("Failed to close [{}]: {}", ObjectUtils.getSimpleName(closeableConsumer), e.getMessage());
         }
 
-        if (CollectionUtils.isNotEmpty(closeableResponseHandlers)) {
-            for (CloseableResponseHandler closeableResponseHandler : closeableResponseHandlers) {
-                try {
-                    closeableResponseHandler.close();
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to close [{}]: {}", ObjectUtils.getSimpleName(closeableResponseHandler), e.getMessage());
-                }
-            }
+        try {
+            getResponseHandlerChain().close();
+        } catch (IOException e) {
+            LOGGER.warn("Failed to close [{}]: {}", ObjectUtils.getSimpleName(getResponseHandlerChain()), e.getMessage());
         }
     }
 
-    public Reptile addUrls(String... urls) {
-        getScheduler().push(Arrays.stream(urls).map(Request::new).toArray(Request[]::new));
-        return this;
+    private ExecutorService buildExecutor() {
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(getThreadCount(),
+                getThreadCount(), 1L, TimeUnit.NANOSECONDS,
+                new SynchronousQueue<>(), new WorkflowThreadFactory(getName()));
+        executor.allowCoreThreadTimeOut(true);
+        return executor;
     }
-
-    public Reptile addRequests(Request... requests) {
-        getScheduler().push(requests);
-        return this;
-    }
-
-    public Reptile addRequests(Collection<Request> requests) {
-        getScheduler().push(requests);
-        return this;
-    }
-
-    public Reptile addUrls(Collection<String> urls) {
-        getScheduler().push(urls.stream().map(Request::new).collect(Collectors.toList()));
-        return this;
-    }
-
-    public int getActiveThreadCount() {
-        return activeThreadCount.get();
-    }
-
 
     private WorkflowFactory buildWorkflow(ReptileConfig reptileConfig) {
         return reptileConfig.getDeploymentMode() == DeploymentModeEnum.SINGLE ?
@@ -215,43 +246,5 @@ public class Reptile implements Runnable {
     private CloseableConsumer getCloseableConsumer() {
         Consumer consumer = getConsumer();
         return consumer instanceof CloseableConsumer ? (CloseableConsumer) consumer : null;
-    }
-
-    // 获取所有可关闭的ResponseHandler
-    private List<CloseableResponseHandler> getCloseableResponseHandler() {
-        List<ResponseHandler> responseHandlers = getResponseHandlers();
-
-        return responseHandlers.stream()
-                .filter(CloseableResponseHandler.class::isInstance)
-                .map(CloseableResponseHandler.class::cast)
-                .collect(Collectors.toList());
-    }
-
-    public String getName() {
-        return reptileConfig.getName();
-    }
-
-    public int getThreadCount() {
-        return reptileConfig.getThreadCount();
-    }
-
-    public Scheduler getScheduler() {
-        return reptileConfig.getScheduler();
-    }
-
-    public Downloader getDownloader() {
-        return reptileConfig.getDownloader();
-    }
-
-    public Consumer getConsumer() {
-        return reptileConfig.getConsumer();
-    }
-
-    public List<ResponseHandler> getResponseHandlers() {
-        return reptileConfig.getResponseHandlers();
-    }
-
-    public boolean isAsynRun() {
-        return reptileConfig.isAsynRun();
     }
 }

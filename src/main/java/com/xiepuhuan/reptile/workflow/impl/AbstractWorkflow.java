@@ -3,12 +3,10 @@ package com.xiepuhuan.reptile.workflow.impl;
 import com.xiepuhuan.reptile.config.ReptileConfig;
 import com.xiepuhuan.reptile.consumer.Consumer;
 import com.xiepuhuan.reptile.downloader.Downloader;
-import com.xiepuhuan.reptile.handler.ResponseHandler;
-import com.xiepuhuan.reptile.model.ResponseContext;
+import com.xiepuhuan.reptile.handler.impl.ResponseHandlerChain;
 import com.xiepuhuan.reptile.scheduler.Scheduler;
 import com.xiepuhuan.reptile.scheduler.impl.AbstractFilterScheduler;
 import com.xiepuhuan.reptile.workflow.Workflow;
-import java.util.List;
 
 /**
  * @author xiepuhuan
@@ -21,7 +19,7 @@ public abstract class AbstractWorkflow implements Workflow {
 
     private final Downloader downloader;
 
-    private final List<ResponseHandler> responseHandlers;
+    private final ResponseHandlerChain responseHandlerChain;
 
     private final Consumer consumer;
 
@@ -35,7 +33,7 @@ public abstract class AbstractWorkflow implements Workflow {
         this.name = name;
         this.scheduler = config.getScheduler();
         this.downloader = config.getDownloader();
-        this.responseHandlers = config.getResponseHandlers();
+        this.responseHandlerChain = config.getResponseHandlerChain();
         this.consumer = config.getConsumer();
         this.sleepTime = config.getSleepTime();
         this.retryCount = config.getRetryCount();
@@ -63,8 +61,8 @@ public abstract class AbstractWorkflow implements Workflow {
     }
 
     @Override
-    public List<ResponseHandler> getResponseHandlers() {
-        return responseHandlers;
+    public ResponseHandlerChain getResponseHandlerChain() {
+        return responseHandlerChain;
     }
 
     @Override
@@ -80,15 +78,5 @@ public abstract class AbstractWorkflow implements Workflow {
     @Override
     public int getRetryCount() {
         return retryCount;
-    }
-
-    protected ResponseHandler selectHandler(ResponseContext responseContext) {
-
-        for (ResponseHandler responseHandler : getResponseHandlers()) {
-            if (responseHandler.isSupport(responseContext)) {
-                return responseHandler;
-            }
-        }
-        return null;
     }
 }

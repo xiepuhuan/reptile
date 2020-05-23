@@ -19,7 +19,7 @@ public class SingleWorkflowFactory implements WorkflowFactory {
 
     private final ReptileConfig config;
 
-    private final AtomicInteger number;
+    private final AtomicInteger counter;
 
     private final String namePrefix = "Single-workflow-";
 
@@ -28,11 +28,11 @@ public class SingleWorkflowFactory implements WorkflowFactory {
         this.activeThreadCount = new AtomicInteger(0);
         this.requestArrived = new Object();
         this.config = config;
-        number = new AtomicInteger(1);
+        this.counter = new AtomicInteger(1);
     }
 
     @Override
     public Workflow newWorkflow() {
-        return new SingleWorkflow(finalization, activeThreadCount, requestArrived, namePrefix + number.getAndIncrement(), config);
+        return new SingleWorkflow(finalization, activeThreadCount, requestArrived, namePrefix + counter.getAndIncrement(), config);
     }
 }
