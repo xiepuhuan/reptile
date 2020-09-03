@@ -6,8 +6,6 @@ import com.xiepuhuan.reptile.consumer.CloseableConsumer;
 import com.xiepuhuan.reptile.consumer.Consumer;
 import com.xiepuhuan.reptile.downloader.CloseableDownloader;
 import com.xiepuhuan.reptile.downloader.Downloader;
-import com.xiepuhuan.reptile.handler.CloseableResponseHandler;
-import com.xiepuhuan.reptile.handler.ResponseHandler;
 import com.xiepuhuan.reptile.handler.impl.ResponseHandlerChain;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.scheduler.CloseableScheduler;
@@ -23,7 +21,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import org.apache.commons.collections4.CollectionUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +85,7 @@ public class Reptile implements Runnable {
         }
 
         LOGGER.info("Reptile [{}] Startup", getName());
-        if (isAsynRun()) {
+        if (isAsyRun()) {
             thread = new Thread(this, getName() + "-thread");
             thread.start();
         } else {
@@ -178,7 +176,7 @@ public class Reptile implements Runnable {
         return reptileConfig.getResponseHandlerChain();
     }
 
-    public boolean isAsynRun() {
+    public boolean isAsyRun() {
         return reptileConfig.isAsynRun();
     }
 

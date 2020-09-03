@@ -1,10 +1,12 @@
 package com.xiepuhuan.reptile.config;
 
 import com.xiepuhuan.reptile.utils.ArgUtils;
-import java.util.Objects;
-
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.ToString;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import java.util.Objects;
 
 /**
  * @author xiepuhuan
@@ -12,8 +14,6 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 @Getter
 @Builder
 @ToString
-@NoArgsConstructor
-@AllArgsConstructor
 public final class RedisConfig {
 
     public static final RedisConfig DEFAULT_REDIS_CONFIG = RedisConfig.builder().build();

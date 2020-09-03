@@ -2,7 +2,6 @@ package com.xiepuhuan.reptile.workflow.impl;
 
 import com.xiepuhuan.reptile.config.ReptileConfig;
 import com.xiepuhuan.reptile.constants.RequestAttributesConstants;
-import com.xiepuhuan.reptile.handler.ResponseHandler;
 import com.xiepuhuan.reptile.model.Request;
 import com.xiepuhuan.reptile.model.Response;
 import com.xiepuhuan.reptile.model.ResponseContext;
@@ -11,8 +10,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.xiepuhuan.reptile.workflow.context.WorkflowContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +40,7 @@ public class SingleWorkflow extends AbstractWorkflow {
     public void run() {
         LOGGER.info("SingleWorkflow [{}] start up", getName());
         activeThreadCount.incrementAndGet();
-        for (; !Thread.interrupted(); ) {
+        while (!Thread.interrupted()) {
 
             Request request = null;
             try {

@@ -11,17 +11,17 @@ public class ArgUtils {
 
     public static void notNull(final Object object, final String name) {
         if (object == null) {
-            throw new NullPointerException(name + "can be not null");
+            throw new NullPointerException(name + " can be not null");
         }
     }
 
     public static void notEmpty(final String str, final String name) {
         if (str == null) {
-            throw new NullPointerException(name + "can be not null");
+            throw new NullPointerException(name + " can be not null");
         }
 
         if (str.length() == 0) {
-            throw new IllegalArgumentException(name + "can be not empty");
+            throw new IllegalArgumentException(name + " can be not empty");
         }
     }
 
@@ -41,23 +41,23 @@ public class ArgUtils {
         return true;
     }
 
-    public static void notEmpty(final Collection collection, final String name) {
+    public static void notEmpty(final Collection<?> collection, final String name) {
         if (collection == null) {
-            throw new NullPointerException(name + "can be not null");
+            throw new NullPointerException(name + " can be not null");
         }
 
         if (collection.size() == 0) {
-            throw new IllegalArgumentException(name + "can be not empty");
+            throw new IllegalArgumentException(name + " can be not empty");
         }
     }
 
     public static void notEmpty(final Object[] objects, final String name) {
         if (objects == null) {
-            throw new NullPointerException(name + "can be not null");
+            throw new NullPointerException(name + " can be not null");
         }
 
         if (objects.length == 0) {
-            throw new IllegalArgumentException(name + "can be not empty");
+            throw new IllegalArgumentException(name + " can be not empty");
         }
     }
 

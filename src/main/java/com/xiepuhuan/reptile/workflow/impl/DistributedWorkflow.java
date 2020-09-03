@@ -30,7 +30,7 @@ public class DistributedWorkflow extends AbstractWorkflow {
     @Override
     public void run() {
         LOGGER.info("DistributedWorkflow [{}] start up", getName());
-        for (; !Thread.interrupted(); ) {
+        while (!Thread.interrupted()) {
             try {
                 Request request = getScheduler().take();
                 Response response = null;
